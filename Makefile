@@ -16,6 +16,7 @@ libsmalloc.a: $(LIB_OBJS)
 	ar cru $@ *.o
 
 smalloc_test_so.so: $(TEST_OBJS)
+	@make libsmalloc.a
 	$(CC) $(CFLAGS) $< -shared -o $@ libsmalloc.a
 	@echo Now you can test it with LD_PRELOAD=./$@ and see it works for conformant apps.
 

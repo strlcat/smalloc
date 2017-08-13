@@ -58,3 +58,21 @@ void *calloc(size_t y, size_t x)
 	init_smalloc();
 	return sm_calloc(y, x);
 }
+
+char *strdup(const char *s)
+{
+	size_t n = strlen(s);
+	char *r = sm_zalloc(n+1);
+	if (!r) return NULL;
+	memcpy(r, s, n);
+	return r;
+}
+
+char *strndup(const char *s, size_t n)
+{
+	size_t x = strnlen(s, n);
+	char *r = sm_zalloc(x+1);
+	if (!r) return NULL;
+	memcpy(r, s, x);
+	return r;
+}
