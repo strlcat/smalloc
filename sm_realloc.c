@@ -46,7 +46,7 @@ void *sm_realloc_pool(struct smalloc_pool *spool, void *p, size_t n)
 	}
 
 	/* newsize is bigger, larger than rsz but there are free blocks beyond - extend */
-	basehdr = spool->pool; dhdr = shdr+1; found = 0;
+	basehdr = spool->pool; dhdr = shdr+(rsz/HEADER_SZ); found = 0;
 	while (CHAR_PTR(dhdr)-CHAR_PTR(basehdr) < spool->pool_size) {
 		x = CHAR_PTR(dhdr)-CHAR_PTR(shdr);
 		if (smalloc_is_alloc(spool, dhdr))
