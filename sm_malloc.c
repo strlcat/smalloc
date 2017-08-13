@@ -19,7 +19,8 @@ again:	if (!smalloc_verify_pool(spool)) {
 	}
 
 	if (n == 0) n++; /* return a block successfully */
-	if (n > SIZE_MAX) goto oom;
+	if (n > SIZE_MAX
+	|| n > (spool->pool_size - HEADER_SZ)) goto oom;
 
 	shdr = basehdr = spool->pool;
 	while (CHAR_PTR(shdr)-CHAR_PTR(basehdr) < spool->pool_size) {
