@@ -24,8 +24,8 @@ struct smalloc_hdr {
 #define CHAR_PTR(p) ((char *)p)
 #define PTR_UINT(p) ((uintptr_t)VOID_PTR(p))
 #define HEADER_PTR(p) ((struct smalloc_hdr *)p)
-#define USER_TO_HEADER(p) (VOID_PTR(CHAR_PTR(p)-HEADER_SZ))
-#define HEADER_TO_USER(p) (CHAR_PTR(p)+HEADER_SZ)
+#define USER_TO_HEADER(p) (HEADER_PTR((CHAR_PTR(p)-HEADER_SZ)))
+#define HEADER_TO_USER(p) (VOID_PTR((CHAR_PTR(p)+HEADER_SZ)))
 
 extern smalloc_bad_block_handler smalloc_bad_block;
 
