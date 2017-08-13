@@ -25,6 +25,7 @@ SMalloc has more useful features rather than usual memory allocators available:
 - SMalloc allows you to obtain clean zeroed objects,
 - SMalloc allows you to request an exact size of (valid) memory block you obtained,
 - SMalloc allows you to manage _multiple! memory arrays_ at same time,
+- SMalloc allows you to check pointer validity before use,
 - SMalloc tries to reuse the pool memory efficiently, because pool size is always fixed,
 - SMalloc can recurse into itself, thus you can allocate a pool from existing pool and use
   it separately, just fill the pool structure, align it and pass it to *_pool() calls then,

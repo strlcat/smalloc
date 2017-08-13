@@ -49,6 +49,8 @@ void sm_free_pool(struct smalloc_pool *, void *);
 void *sm_realloc_pool(struct smalloc_pool *, void *, size_t);
 void *sm_calloc_pool(struct smalloc_pool *, size_t, size_t);
 
+int sm_alloc_valid_pool(struct smalloc_pool *spool, void *p);
+
 size_t sm_szalloc_pool(struct smalloc_pool *, void *);
 int sm_malloc_stats_pool(struct smalloc_pool *, size_t *, size_t *, size_t *, int *);
 
@@ -60,6 +62,8 @@ void sm_free(void *);
 
 void *sm_realloc(void *, size_t);
 void *sm_calloc(size_t, size_t); /* calls zalloc internally */
+
+int sm_alloc_valid(void *p); /* verify pointer without intentional crash */
 
 size_t sm_szalloc(void *); /* get size of allocation */
 /*
