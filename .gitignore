@@ -2,3 +2,5 @@ _*
 *.swp
 *.o
 *.a
+*.so
+tags
