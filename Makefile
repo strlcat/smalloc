@@ -3,16 +3,21 @@
 # Copyright (c) 2017 Andrey Rys.
 
 SRCS = $(wildcard *.c)
-OBJS = $(SRCS:.c=.o)
-override CFLAGS += -Wall
+LIB_OBJS = $(filter-out smalloc_test_so.o, $(SRCS:.c=.o))
+TEST_OBJS = smalloc_test_so.o
+override CFLAGS += -Wall -fPIC
 
-all: $(OBJS) libsmalloc.a
+all: $(LIB_OBJS) libsmalloc.a
 
 %.o: %.c
 	$(CC) $(CFLAGS) -c -o $@ $<
 
-libsmalloc.a: $(OBJS)
+libsmalloc.a: $(LIB_OBJS)
 	ar cru $@ *.o
 
+smalloc_test_so.so: $(TEST_OBJS)
+	$(CC) $(CFLAGS) $< -shared -o $@ libsmalloc.a
+	@echo Now you can test it with LD_PRELOAD=./$@ and see it works for conformant apps.
+
 clean:
-	rm -f *.a *.o
+	rm -f *.a *.so *.o
