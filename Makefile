@@ -10,14 +10,14 @@ override CFLAGS += -Wall -fPIC
 all: $(LIB_OBJS) libsmalloc.a
 
 %.o: %.c
-	$(CC) $(CFLAGS) -c -o $@ $<
+	$(CROSS_COMPILE)$(CC) $(CFLAGS) -c -o $@ $<
 
 libsmalloc.a: $(LIB_OBJS)
-	ar cru $@ *.o
+	$(CROSS_COMPILE)$(AR) cru $@ *.o
 
 smalloc_test_so.so: $(TEST_OBJS)
-	@make libsmalloc.a
-	$(CC) $(CFLAGS) $< -shared -o $@ libsmalloc.a
+	@$(MAKE) libsmalloc.a
+	$(CROSS_COMPILE)$(CC) $(CFLAGS) $< -shared -o $@ libsmalloc.a
 	@echo Now you can test it with LD_PRELOAD=./$@ and see it works for conformant apps.
 
 clean:
