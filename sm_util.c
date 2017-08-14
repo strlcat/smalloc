@@ -38,8 +38,8 @@ void sm_set_bad_block_handler(smalloc_bad_block_handler handler)
 
 int smalloc_is_alloc(struct smalloc_pool *spool, struct smalloc_hdr *shdr)
 {
-	if (!smalloc_valid_tag(shdr)) return 0;
 	if (!smalloc_check_bounds(spool, shdr)) return 0;
+	if (!smalloc_valid_tag(shdr)) return 0;
 	if (shdr->rsz == 0) return 0;
 	if (shdr->rsz > SIZE_MAX) return 0;
 	if (shdr->usz > SIZE_MAX) return 0;
