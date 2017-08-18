@@ -26,7 +26,7 @@ void *sm_realloc_pool(struct smalloc_pool *spool, void *p, size_t n)
 
 	/* determine user size */
 	shdr = USER_TO_HEADER(p);
-	if (!smalloc_is_alloc(spool, shdr)) smalloc_bad_block(spool, p);
+	if (!smalloc_is_alloc(spool, shdr)) smalloc_UB(spool, p);
 	usz = shdr->usz;
 	rsz = shdr->rsz;
 

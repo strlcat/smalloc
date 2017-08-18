@@ -25,7 +25,7 @@ void sm_free_pool(struct smalloc_pool *spool, void *p)
 		return;
 	}
 
-	smalloc_bad_block(spool, p);
+	smalloc_UB(spool, p);
 	return;
 }
 

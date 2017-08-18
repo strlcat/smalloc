@@ -27,7 +27,7 @@ struct smalloc_hdr {
 #define USER_TO_HEADER(p) (HEADER_PTR((CHAR_PTR(p)-HEADER_SZ)))
 #define HEADER_TO_USER(p) (VOID_PTR((CHAR_PTR(p)+HEADER_SZ)))
 
-extern smalloc_bad_block_handler smalloc_bad_block;
+extern smalloc_ub_handler smalloc_UB;
 
 uintptr_t smalloc_uinthash(uintptr_t x);
 uintptr_t smalloc_mktag(struct smalloc_hdr *shdr);

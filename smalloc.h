@@ -29,10 +29,10 @@ struct smalloc_pool {
 /* a default one which is initialised with sm_set_default_pool. */
 extern struct smalloc_pool smalloc_curr_pool;
 
-/* bad block handler is called on typical malloc UB situations */
-typedef void (*smalloc_bad_block_handler)(struct smalloc_pool *, void *);
+/* undefined behavior handler is called on typical malloc UB situations */
+typedef void (*smalloc_ub_handler)(struct smalloc_pool *, const void *);
 
-void sm_set_bad_block_handler(smalloc_bad_block_handler);
+void sm_set_ub_handler(smalloc_ub_handler);
 
 int sm_align_pool(struct smalloc_pool *);
 int sm_set_pool(struct smalloc_pool *, void *, size_t, int, smalloc_oom_handler);
@@ -49,9 +49,9 @@ void sm_free_pool(struct smalloc_pool *, void *);
 void *sm_realloc_pool(struct smalloc_pool *, void *, size_t);
 void *sm_calloc_pool(struct smalloc_pool *, size_t, size_t);
 
-int sm_alloc_valid_pool(struct smalloc_pool *spool, void *p);
+int sm_alloc_valid_pool(struct smalloc_pool *spool, const void *p);
 
-size_t sm_szalloc_pool(struct smalloc_pool *, void *);
+size_t sm_szalloc_pool(struct smalloc_pool *, const void *);
 int sm_malloc_stats_pool(struct smalloc_pool *, size_t *, size_t *, size_t *, int *);
 
 /* Use these when you use just default smalloc_curr_pool pool */
@@ -63,9 +63,9 @@ void sm_free(void *);
 void *sm_realloc(void *, size_t);
 void *sm_calloc(size_t, size_t); /* calls zalloc internally */
 
-int sm_alloc_valid(void *p); /* verify pointer without intentional crash */
+int sm_alloc_valid(const void *p); /* verify pointer without intentional crash */
 
-size_t sm_szalloc(void *); /* get size of allocation */
+size_t sm_szalloc(const void *); /* get size of allocation */
 /*
  * get stats: total used, user used, total free, nr. of allocated blocks.
  * any of pointers maybe set to NULL, but at least one must be non NULL.

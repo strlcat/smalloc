@@ -22,18 +22,18 @@ static int smalloc_valid_tag(struct smalloc_hdr *shdr)
 	return 0;
 }
 
-static void smalloc_do_crash(struct smalloc_pool *spool, void *p)
+static void smalloc_do_crash(struct smalloc_pool *spool, const void *p)
 {
 	char *c = NULL;
 	*c = 'X';
 }
 
-smalloc_bad_block_handler smalloc_bad_block = smalloc_do_crash;
+smalloc_ub_handler smalloc_UB = smalloc_do_crash;
 
-void sm_set_bad_block_handler(smalloc_bad_block_handler handler)
+void sm_set_ub_handler(smalloc_ub_handler handler)
 {
-	if (!handler) smalloc_bad_block = smalloc_do_crash;
-	else smalloc_bad_block = handler;
+	if (!handler) smalloc_UB = smalloc_do_crash;
+	else smalloc_UB = handler;
 }
 
 int smalloc_is_alloc(struct smalloc_pool *spool, struct smalloc_hdr *shdr)

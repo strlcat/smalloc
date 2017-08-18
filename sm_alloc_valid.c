@@ -6,7 +6,7 @@
 
 #include "smalloc_i.h"
 
-int sm_alloc_valid_pool(struct smalloc_pool *spool, void *p)
+int sm_alloc_valid_pool(struct smalloc_pool *spool, const void *p)
 {
 	struct smalloc_hdr *shdr;
 
@@ -17,7 +17,7 @@ int sm_alloc_valid_pool(struct smalloc_pool *spool, void *p)
 	return 0;
 }
 
-int sm_alloc_valid(void *p)
+int sm_alloc_valid(const void *p)
 {
 	return sm_alloc_valid_pool(&smalloc_curr_pool, p);
 }

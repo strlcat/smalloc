@@ -6,7 +6,7 @@
 
 #include "smalloc_i.h"
 
-size_t sm_szalloc_pool(struct smalloc_pool *spool, void *p)
+size_t sm_szalloc_pool(struct smalloc_pool *spool, const void *p)
 {
 	struct smalloc_hdr *shdr;
 
@@ -19,11 +19,11 @@ size_t sm_szalloc_pool(struct smalloc_pool *spool, void *p)
 
 	shdr = USER_TO_HEADER(p);
 	if (smalloc_is_alloc(spool, shdr)) return shdr->usz;
-	smalloc_bad_block(spool, p);
+	smalloc_UB(spool, p);
 	return 0;
 }
 
-size_t sm_szalloc(void *p)
+size_t sm_szalloc(const void *p)
 {
 	return sm_szalloc_pool(&smalloc_curr_pool, p);
 }
