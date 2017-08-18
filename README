@@ -96,7 +96,7 @@ SMalloc is a header->data type memory allocator. It has no any additional protec
 It's header consists of three numbers:
 - Real size of allocation,
 - Pure user size of allocation,
-- Magic "tag" valus, which is a hash of current *header* address, the rsize and usize values above.
+- Magic "tag" value, which is a hash of current *header* address, the rsize and usize values above.
 The header is written prior to user data. The "tag" is required to distinguish a genuine header
 out of user data and to guarantee that user is not such lucky to forge it.
 Real size indicates full block size with any header-wide overhead.
