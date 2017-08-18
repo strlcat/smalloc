@@ -1,0 +1,475 @@
+.Dd 18Aug2017
+.Dt SMALLOC 3
+.Os R2
+
+.Sh NAME
+.Nm smalloc
+: sm_malloc, sm_zalloc, sm_free, sm_realloc, sm_calloc, sm_szalloc
+.Nd allocate, manage, resize, query size and free dynamic memory which allocated from user pointed static memory area;
+
+sm_alloc_valid - query object validity;
+
+sm_malloc_stats - get attached pool statistics;
+
+sm_set_default_pool, sm_release_default_pool - attach and release pool;
+
+sm_set_ub_handler - set global
+.Nm
+undefined behavior handler.
+
+.Sh SYNOPSIS
+.In errno.h
+.In smalloc.h
+.Fn "void *sm_malloc" "size_t n"
+.Fn "void *sm_zalloc" "size_t n"
+.Fn "void sm_free" "void *p"
+.Fn "void *sm_realloc" "void *p" "size_t n"
+.Fn "void *sm_calloc" "size_t y" "size_t x"
+.Fn "size_t sm_szalloc" "void *p"
+.Fn "int sm_alloc_valid" "void *p"
+.Fn "int sm_malloc_stats" "size_t *total" "size_t *user" "size_t *free" "int *nr_obj"
+.Fn "int sm_set_default_pool" "void *pool" "size_t pool_size" "int do_zero" "smalloc_oom_handler oom_handler_fn"
+.Fn "int sm_release_default_pool" "void"
+.Fn "void sm_set_ub_handler" "smalloc_ub_handler ub_handler"
+
+.Sh DESCRIPTION
+.Nm
+is a portable and simple memory management package which is intended to be used especially with user provided memory regions. It is like a normal
+.Xr malloc 3
+provided by any modern system today (and you should expect conventional behavior), but it extends it by allowing the user to specify memory area,
+.Em a custom heap ,
+in which all the allocations will be stored.
+
+.Sy sm_malloc, sm_zalloc, sm_calloc
+allocate memory.
+.Sy sm_zalloc
+and
+.Sy sm_calloc
+guarantee zero-fill of newly created object.
+.Sy sm_malloc
+may return object containing garbage (usually, if pool is static storage, it contains zeroes after program start, but after extensive usage it will contain garbage).
+
+.Sy sm_realloc
+change already allocated object size, but also can be used to allocate and free memory too.
+
+.Sy sm_free
+deallocates
+.Nm
+allocated memory.
+
+.Sy sm_szalloc
+queries a
+.Em valid
+.Nm
+memory block size.
+
+.Sy sm_alloc_valid
+tests if a pointer belongs to valid
+.Nm
+object within the pool.
+
+.Sy sm_malloc_stats
+accept four pointers to numbers where it stores current pool state:
+.Fa *total
+accepts total used bytes in pool: user data with any overhead added by
+.Nm ,
+.Fa *user
+accepts total user bytes with any user overhead,
+.Fa *free
+accepts total free bytes still available, and
+.Fa *nr_obj
+accepts number of already allocated objects within the pool.
+
+.Sy sm_set_default_pool
+takes
+.Fa *pool
+pool of
+.Fa pool_size
+size and registers it as a global default pool.
+Nonzero
+.Fa do_zero
+instructs
+.Nm
+to zero-fill pool before use,
+.Em and also zero any newly allocated objects before returning them, and zero any to be freed objects upon to returning them back to the pool.
+If
+.Fa do_zero
+is 0, then only
+.Sy sm_zalloc
+and
+.Sy sm_calloc
+zero-fill object before returning them to caller, but
+.Sy sm_malloc
+will return object possibly containing garbage.
+.Fa oom_handler_fn
+can be either
+.Em NULL
+or a pointer to OOM handler function (see
+.Sx ERROR HANDLERS
+for a description). In case of
+.Em NULL ,
+no OOM handler is called at all on an OOM condition.
+
+.Sy sm_release_default_pool
+deregisters current pool and zero-fills it (erases) if
+.Fa do_zero
+argument to
+.Sy sm_set_default_pool
+was nonzero. All further calls to any allocation or freeing functions will fail without registered pool.
+
+.Sy sm_set_ub_handler
+sets global undefined behavior handler. It's description is given in
+.Sx ERROR HANDLERS
+section.
+If
+.Em NULL
+is passed as
+.Fa ub_handler ,
+then internal UB handler is reset to
+.Nm
+default one: crashing the program.
+
+.Sh RETURN VALUE
+.Sy sm_malloc, sm_zalloc, sm_calloc
+return a pointer to newly created object on success. The data it poins to can be used only up to
+.Fa n
+argument passed to them (or
+.Fa y * x
+in case of
+.Sy sm_calloc )
+If
+.Fa n
+is 0, these functions return a pointer to newly created object
+.Em which content should be never accessed .
+.
+They return
+.Em NULL
+on failure to allocate memory and set
+.Va errno
+to
+.Em ENOMEM .
+
+.Sy sm_realloc
+returns a pointer to object which size was adjusted.
+.Em The object address may differ from passed in address .
+If
+.Fa p
+is
+.Em NULL ,
+then the call is equivalent to
+.Fn "sm_malloc" "n" .
+If
+.Fa p
+is a pointer to existing object and
+.Fa n
+is 0, then the call is equivalent to
+.Fn "sm_free" "p" .
+On failure to relocate or size change, it will return
+.Em NULL
+and set
+.Va errno
+to
+.Em ENOMEM .
+
+.Sy sm_free
+does not return a value, but may change
+.Va errno
+in cases described in
+.Sx NOTES
+section.
+
+.Sy sm_szalloc
+return an exact object size of object pointed to by
+.Fa p
+(the argument
+.Fa n
+passed to any of:
+.Sy sm_malloc, sm_zalloc, sm_realloc
+and
+.Fa y * x
+result of
+.Sy sm_calloc )
+.
+.Em This is the only permitted area that the caller may use.
+For
+.Em NULL
+as argument,
+.Sy sm_szalloc
+returns 0.
+For unique object of 0 size created with
+.Fn "sm_malloc" "0"
+(or equivalent), the return value is 1,
+.Em but this may be changed in future .
+
+.Sy sm_alloc_valid
+returns 1 if object pointed to by
+.Fa p
+is valid reference, 0 otherwise. It does not permit to differentiate between multiple pools.
+
+.Sy sm_malloc_stats
+return 1 when the pool contains at least one object, thus numbers stored are not zeroes, 0 if no objects are in pool or
+.Em all arguments are NULLs ,
+or -1 on any other error described in
+.Sx NOTES
+section.
+
+.Sy sm_set_default_pool
+returns 1 on success (pool was registered), 0 if pool is very small to use. In this situation, an
+.Va errno
+will be also set to
+.Em ENOSPC .
+
+.Sy sm_release_default_pool
+returns 1 on success (an existing pool was successfully deregistered), 0 otherwise, with
+.Va errno
+set to
+.Em EINVAL .
+
+.Sy sm_set_ub_handler
+always succeeds and does not return any value.
+
+.Sh NOTES
+If pool was never registered, or recently was deregistered with
+.Sy sm_release_default_pool ,
+then all memory management functions will fail by returning their error values:
+.Em NULL
+or
+.Em 0
+or
+.Em -1
+or
+.Em (size_t)-1 ,
+or
+.Em (void)
+and
+.Va errno
+will be set to
+.Em EINVAL .
+
+All functions working on existing objects which take pointers to them, except
+.Sy sm_alloc_valid ,
+will check the pointer to be a valid reference to existing object belonging to registered pool.
+If an invalid pointer is catched, then
+.Nm
+calls an
+.Em undefined behavior
+handler. The default
+.Nm
+embedded UB handler is set to crash the program to bring programmer's attention as early as possible. This handler can be overriden with
+.Sy sm_set_ub_handler
+for a lifetime of program until next call to this function.
+.Sy sm_alloc_valid
+does not call UB handler in case of invalid pointer reference: it was specially designed to answer the question:
+.Dq Is this pointer a valid object reference?
+
+One can implement a classic but more precise malloc on top of
+.Nm
+by using
+.Xr brk 2
+as a custom heap and extending it on each OOM handler call.
+
+.Sh ERROR HANDLERS
+.Sy smalloc_oom_handler
+Out Of Memory handler is defined as follows:
+.Bd -literal -offset 8n
+typedef size_t (*smalloc_oom_handler)(struct smalloc_pool *, size_t);
+size_t oom_handler(struct smalloc_pool *spool, size_t failed_alloc_req);
+.Ed
+
+It takes a pool descriptor
+.Fa *spool
+(see
+.Sx MULTIPLE POOLS
+section)
+and
+.Fa failed_alloc_req ,
+which is size of object that failed to be created (the
+.Fa n
+argument to allocation functions).
+The task of OOM handler is either to report an abnormal condition, possibly (and often) with program abortion or other way to exit, or to extend the pool, if possible (if pool is static, but resizeable).
+In case of refuse to extend, but without abortion, the handler must return 0. Otherwise handler must return a
+.Em new size of pool after successful extension .
+
+.Em IMPORTANT! The pool CANNOT BE RELOCATED IF IT CONTAINS ALLOCATED OBJECTS
+with functions such as
+.Xr realloc 3 .
+Relocation of pool will lead to bad references to the objects stored inside pointers across your program! You must ensure that pool will never be relocated once used when resizing the pool.
+Returning a size lesser than current pool size will not lead to extension of pool, the effect will be the same as if handler would return 0. Returned size may or may not be not aligned: the function will align the new size automatically.
+
+.Sy smalloc_ub_handler
+Undefined Behavior handler is defined as follows:
+.Bd -literal -offset 8n
+typedef void (*smalloc_ub_handler)(struct smalloc_pool *, const void *);
+void ub_handler(struct smalloc_pool *spool, const void *offender);
+.Ed
+
+It takes a pool descriptor
+.Fa *spool
+(see
+.Sx MULTIPLE POOLS
+section)
+and
+.Fa *offender
+pointer which is an exact pointer value that caused an UB exception.
+The task of UB handler is to report the condition as fast as possible and abort the program. An UB handler can
+.Em ignore
+abnormal condition, but it is highly discouraged.
+Default UB handler embedded into
+.Nm
+itself is to cause program crash by writing to NULL pointer. It does not report condition somewhere just not to depend on libc's stdio package (or something other, possibly platform specific).
+
+.Sh MULTIPLE POOLS
+.Nm
+supports using multiple pools in parallel (but not in multithreaded environment however). There are versions of described functions above which names end with
+.Sq _pool
+suffix and have prepended their first argument as
+.Fa "struct smalloc_pool *" ,
+which is a pool descriptor of this format:
+.Bd -literal -offset 8n
+struct smalloc_pool {
+	void *pool;
+	size_t pool_size;
+	int do_zero;
+	smalloc_oom_handler oomfn;
+};
+.Ed
+
+Manual fill of the structure is
+.Em NOT RECOMMENDED ,
+it is best to use a pool aware
+.Sy sm_set_pool
+function, which is just the
+.Sy sm_set_default_pool
+variant with
+.Fa "struct smalloc_pool *"
+as it's first argument.
+
+Releasing such a pool is done with
+.Sy sm_release_pool ,
+which takes
+.Fa "struct smalloc_pool *"
+as it's only single argument.
+
+Memory behind these descriptors is not allocated by
+.Nm ,
+it is task of the caller to store pool descriptors somewhere.
+
+Then caller may turn normal functions into pool versions, for example:
+.Fn "sm_realloc" "void *p" "size_t n"
+turns into
+.Fn "sm_realloc_pool" "struct smalloc_pool *spool" "void *p" "size_t n" ,
+and so on.
+
+There is a
+.Sy sm_align_pool
+function, which takes a pool descriptor and adjusts it's
+.Va pool_size
+member to a value best fit for a
+.Nm .
+This function is provided only for manual fill of the pool descriptor.
+.Em Unaligned pool descriptors will be rejected
+by
+.Nm
+and
+.Va errno
+will be set to
+.Em EINVAL
+in such cases.
+
+.Sh FILES
+See
+.Pa smalloc.h ,
+.Pa smalloc_test_so.c ,
+and source code.
+
+.Sh EXAMPLE
+This is the minimal example of how to use the library:
+.Bd -literal -offset 8n
+#include <smalloc.h>
+
+static char my_pool[16384];
+
+int main(void)
+{
+	char *s, *d;
+	size_t n;
+
+	if (!sm_set_default_pool(my_pool, sizeof(my_pool), 0, NULL)) return 1;
+
+	s = sm_malloc(40);
+	if (s) {
+		n = sm_szalloc(s);
+		memset(s, 'X', n);
+	}
+	d = sm_malloc(700);
+	if (d) memset(d, 'Y', sm_szalloc(d));
+	s = sm_realloc(s, n+30);
+	if (s) memset(s+n, 'x', sm_szalloc(s)-n);
+	d = sm_realloc(d, 14000);
+	if (d) memset(d, 'y', sm_szalloc(d));
+
+	sm_free(s);
+	sm_free(d);
+
+	sm_release_default_pool();
+
+	return 0;
+}
+.Ed
+
+.Sh BUGS
+Returned objects may or may not be aligned to be used for any kind of variable. However it places objects exactly so at least integers and pointers can be placed and used without harm within them.
+
+Allocations lesser than 12 bytes on 32 bit systems (typ.) are not so efficient: the object header takes 12 bytes and minimum overhead size is also 12 bytes. So per each, for example, 4 byte request there will be a 20 byte of overhead. On 64 bit systems it's even worse, things usually double.
+
+True multithreading with locking was not implemented and is not currently a planned task.
+
+Unlike highly promoted Linux's behavior about always succeeding
+.Sy malloc ,
+the memory in
+.Nm
+is managed directly by programmer.
+
+.Sh CONFORMING TO
+.Sy sm_malloc, sm_calloc, sm_realloc
+and
+.Sy sm_free
+are fully compatible with usual
+.Sy malloc, calloc, realloc
+and
+.Sy free .
+Their behavior on normal/failed situations is same (or should be same - report a bug if not).
+Programmer should not bother about UB because good program does not invoke UB.
+
+.Sy sm_zalloc, sm_szalloc
+and
+.Sy sm_alloc_valid
+are
+.Nm
+extensions. They're not implemented in other malloc type packages, thus their usage is not portable.
+
+.Sh AUTHORS
+.Nm
+was written in spare time by
+.An Andrey Rys Aq Mt rys@lynxlynx.ru
+for his own
+.Xr super 8
+program. This library is available at
+.Lk https://gitlab.com/lynxlynx/smalloc/ ,
+and
+.Xr super 8
+is available at
+.Lk https://gitlab.com/SANELINUX/super/ .
+
+The code, unlike any other programs written by Rys is MIT licensed:
+.Em Copyright (c) 2017 Andrey Rys <rys@lynxlynx.ru> .
+See
+.Em COPYRIGHT
+file in the source distribution for complete terms.
+
+.Sh SEE ALSO
+
+.Xr malloc 3 ,
+.Xr calloc 3 ,
+.Xr free 3 ,
+.Xr realloc 3 .

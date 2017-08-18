@@ -1,0 +1,317 @@
+SMALLOC(3)                 Library Functions Manual                 SMALLOC(3)
+
+
+
+NNAAMMEE
+     ssmmaalllloocc : sm_malloc, sm_zalloc, sm_free, sm_realloc, sm_calloc,
+     sm_szalloc - allocate, manage, resize, query size and free dynamic memory
+     which allocated from user pointed static memory area;
+
+     sm_alloc_valid - query object validity;
+
+     sm_malloc_stats - get attached pool statistics;
+
+     sm_set_default_pool, sm_release_default_pool - attach and release pool;
+
+     sm_set_ub_handler - set global ssmmaalllloocc undefined behavior handler.
+
+
+SSYYNNOOPPSSIISS
+     ##iinncclluuddee <<eerrrrnnoo..hh>>
+     ##iinncclluuddee <<ssmmaalllloocc..hh>>
+
+     vvooiidd **ssmm__mmaalllloocc(_s_i_z_e___t _n);
+
+     vvooiidd **ssmm__zzaalllloocc(_s_i_z_e___t _n);
+
+     vvooiidd ssmm__ffrreeee(_v_o_i_d _*_p);
+
+     vvooiidd **ssmm__rreeaalllloocc(_v_o_i_d _*_p, _s_i_z_e___t _n);
+
+     vvooiidd **ssmm__ccaalllloocc(_s_i_z_e___t _y, _s_i_z_e___t _x);
+
+     ssiizzee__tt ssmm__sszzaalllloocc(_v_o_i_d _*_p);
+
+     iinntt ssmm__aalllloocc__vvaalliidd(_v_o_i_d _*_p);
+
+     iinntt ssmm__mmaalllloocc__ssttaattss(_s_i_z_e___t _*_t_o_t_a_l, _s_i_z_e___t _*_u_s_e_r, _s_i_z_e___t _*_f_r_e_e,
+         _i_n_t _*_n_r___o_b_j);
+
+     iinntt ssmm__sseett__ddeeffaauulltt__ppooooll(_v_o_i_d _*_p_o_o_l, _s_i_z_e___t _p_o_o_l___s_i_z_e, _i_n_t _d_o___z_e_r_o,
+         _s_m_a_l_l_o_c___o_o_m___h_a_n_d_l_e_r _o_o_m___h_a_n_d_l_e_r___f_n);
+
+     iinntt ssmm__rreelleeaassee__ddeeffaauulltt__ppooooll(_v_o_i_d);
+
+     vvooiidd ssmm__sseett__uubb__hhaannddlleerr(_s_m_a_l_l_o_c___u_b___h_a_n_d_l_e_r _u_b___h_a_n_d_l_e_r);
+
+
+DDEESSCCRRIIPPTTIIOONN
+     ssmmaalllloocc is a portable and simple memory management package which is
+     intended to be used especially with user provided memory regions. It is
+     like a normal malloc(3) provided by any modern system today (and you
+     should expect conventional behavior), but it extends it by allowing the
+     user to specify memory area, _a _c_u_s_t_o_m _h_e_a_p, in which all the allocations
+     will be stored.
+
+     ssmm__mmaalllloocc,, ssmm__zzaalllloocc,, ssmm__ccaalllloocc allocate memory.  ssmm__zzaalllloocc and ssmm__ccaalllloocc
+     guarantee zero-fill of newly created object.  ssmm__mmaalllloocc may return object
+     containing garbage (usually, if pool is static storage, it contains
+     zeroes after program start, but after extensive usage it will contain
+     garbage).
+
+     ssmm__rreeaalllloocc change already allocated object size, but also can be used to
+     allocate and free memory too.
+
+     ssmm__ffrreeee deallocates ssmmaalllloocc allocated memory.
+
+     ssmm__sszzaalllloocc queries a _v_a_l_i_d ssmmaalllloocc memory block size.
+
+     ssmm__aalllloocc__vvaalliidd tests if a pointer belongs to valid ssmmaalllloocc object within
+     the pool.
+
+     ssmm__mmaalllloocc__ssttaattss accept four pointers to numbers where it stores current
+     pool state: _*_t_o_t_a_l accepts total used bytes in pool: user data with any
+     overhead added by ssmmaalllloocc, _*_u_s_e_r accepts total user bytes with any user
+     overhead, _*_f_r_e_e accepts total free bytes still available, and _*_n_r___o_b_j
+     accepts number of already allocated objects within the pool.
+
+     ssmm__sseett__ddeeffaauulltt__ppooooll takes _*_p_o_o_l pool of _p_o_o_l___s_i_z_e size and registers it
+     as a global default pool.  Nonzero _d_o___z_e_r_o instructs ssmmaalllloocc to zero-fill
+     pool before use, _a_n_d _a_l_s_o _z_e_r_o _a_n_y _n_e_w_l_y _a_l_l_o_c_a_t_e_d _o_b_j_e_c_t_s _b_e_f_o_r_e
+     _r_e_t_u_r_n_i_n_g _t_h_e_m_, _a_n_d _z_e_r_o _a_n_y _t_o _b_e _f_r_e_e_d _o_b_j_e_c_t_s _u_p_o_n _t_o _r_e_t_u_r_n_i_n_g _t_h_e_m
+     _b_a_c_k _t_o _t_h_e _p_o_o_l_. If _d_o___z_e_r_o is 0, then only ssmm__zzaalllloocc and ssmm__ccaalllloocc
+     zero-fill object before returning them to caller, but ssmm__mmaalllloocc will
+     return object possibly containing garbage.  _o_o_m___h_a_n_d_l_e_r___f_n can be either
+     _N_U_L_L or a pointer to OOM handler function (see _E_R_R_O_R _H_A_N_D_L_E_R_S for a
+     description). In case of _N_U_L_L, no OOM handler is called at all on an OOM
+     condition.
+
+     ssmm__rreelleeaassee__ddeeffaauulltt__ppooooll deregisters current pool and zero-fills it
+     (erases) if _d_o___z_e_r_o argument to ssmm__sseett__ddeeffaauulltt__ppooooll was nonzero. All
+     further calls to any allocation or freeing functions will fail without
+     registered pool.
+
+     ssmm__sseett__uubb__hhaannddlleerr sets global undefined behavior handler. It's
+     description is given in _E_R_R_O_R _H_A_N_D_L_E_R_S section.  If _N_U_L_L is passed as
+     _u_b___h_a_n_d_l_e_r, then internal UB handler is reset to ssmmaalllloocc default one:
+     crashing the program.
+
+
+RREETTUURRNN VVAALLUUEE
+     ssmm__mmaalllloocc,, ssmm__zzaalllloocc,, ssmm__ccaalllloocc return a pointer to newly created object
+     on success. The data it poins to can be used only up to _n argument passed
+     to them (or _y _* _x in case of ssmm__ccaalllloocc) If _n is 0, these functions return
+     a pointer to newly created object _w_h_i_c_h _c_o_n_t_e_n_t _s_h_o_u_l_d _b_e _n_e_v_e_r _a_c_c_e_s_s_e_d.
+     They return _N_U_L_L on failure to allocate memory and set _e_r_r_n_o to _E_N_O_M_E_M.
+
+     ssmm__rreeaalllloocc returns a pointer to object which size was adjusted.  _T_h_e
+     _o_b_j_e_c_t _a_d_d_r_e_s_s _m_a_y _d_i_f_f_e_r _f_r_o_m _p_a_s_s_e_d _i_n _a_d_d_r_e_s_s.  If _p is _N_U_L_L, then the
+     call is equivalent to ssmm__mmaalllloocc(_n).  If _p is a pointer to existing object
+     and _n is 0, then the call is equivalent to ssmm__ffrreeee(_p).  On failure to
+     relocate or size change, it will return _N_U_L_L and set _e_r_r_n_o to _E_N_O_M_E_M.
+
+     ssmm__ffrreeee does not return a value, but may change _e_r_r_n_o in cases described
+     in _N_O_T_E_S section.
+
+     ssmm__sszzaalllloocc return an exact object size of object pointed to by _p (the
+     argument _n passed to any of: ssmm__mmaalllloocc,, ssmm__zzaalllloocc,, ssmm__rreeaalllloocc and _y _* _x
+     result of ssmm__ccaalllloocc) _T_h_i_s _i_s _t_h_e _o_n_l_y _p_e_r_m_i_t_t_e_d _a_r_e_a _t_h_a_t _t_h_e _c_a_l_l_e_r _m_a_y
+     _u_s_e_. For _N_U_L_L as argument, ssmm__sszzaalllloocc returns 0.  For unique object of 0
+     size created with ssmm__mmaalllloocc(_0) (or equivalent), the return value is 1,
+     _b_u_t _t_h_i_s _m_a_y _b_e _c_h_a_n_g_e_d _i_n _f_u_t_u_r_e.
+
+     ssmm__aalllloocc__vvaalliidd returns 1 if object pointed to by _p is valid reference, 0
+     otherwise. It does not permit to differentiate between multiple pools.
+
+     ssmm__mmaalllloocc__ssttaattss return 1 when the pool contains at least one object, thus
+     numbers stored are not zeroes, 0 if no objects are in pool or _a_l_l
+     _a_r_g_u_m_e_n_t_s _a_r_e _N_U_L_L_s, or -1 on any other error described in _N_O_T_E_S section.
+
+     ssmm__sseett__ddeeffaauulltt__ppooooll returns 1 on success (pool was registered), 0 if pool
+     is very small to use. In this situation, an _e_r_r_n_o will be also set to
+     _E_N_O_S_P_C.
+
+     ssmm__rreelleeaassee__ddeeffaauulltt__ppooooll returns 1 on success (an existing pool was
+     successfully deregistered), 0 otherwise, with _e_r_r_n_o set to _E_I_N_V_A_L.
+
+     ssmm__sseett__uubb__hhaannddlleerr always succeeds and does not return any value.
+
+
+NNOOTTEESS
+     If pool was never registered, or recently was deregistered with
+     ssmm__rreelleeaassee__ddeeffaauulltt__ppooooll, then all memory management functions will fail
+     by returning their error values: _N_U_L_L or _0 or _-_1 or _(_s_i_z_e___t_)_-_1, or _(_v_o_i_d_)
+     and _e_r_r_n_o will be set to _E_I_N_V_A_L.
+
+     All functions working on existing objects which take pointers to them,
+     except ssmm__aalllloocc__vvaalliidd, will check the pointer to be a valid reference to
+     existing object belonging to registered pool.  If an invalid pointer is
+     catched, then ssmmaalllloocc calls an _u_n_d_e_f_i_n_e_d _b_e_h_a_v_i_o_r handler. The default
+     ssmmaalllloocc embedded UB handler is set to crash the program to bring
+     programmer's attention as early as possible. This handler can be
+     overriden with ssmm__sseett__uubb__hhaannddlleerr for a lifetime of program until next
+     call to this function.  ssmm__aalllloocc__vvaalliidd does not call UB handler in case
+     of invalid pointer reference: it was specially designed to answer the
+     question: ``Is this pointer a valid object reference?''
+
+     One can implement a classic but more precise malloc on top of ssmmaalllloocc by
+     using brk(2) as a custom heap and extending it on each OOM handler call.
+
+
+EERRRROORR HHAANNDDLLEERRSS
+     ssmmaalllloocc__oooomm__hhaannddlleerr Out Of Memory handler is defined as follows:
+
+             typedef size_t (*smalloc_oom_handler)(struct smalloc_pool *, size_t);
+             size_t oom_handler(struct smalloc_pool *spool, size_t failed_alloc_req);
+
+     It takes a pool descriptor _*_s_p_o_o_l (see _M_U_L_T_I_P_L_E _P_O_O_L_S section) and
+     _f_a_i_l_e_d___a_l_l_o_c___r_e_q, which is size of object that failed to be created (the
+     _n argument to allocation functions).  The task of OOM handler is either
+     to report an abnormal condition, possibly (and often) with program
+     abortion or other way to exit, or to extend the pool, if possible (if
+     pool is static, but resizeable).  In case of refuse to extend, but
+     without abortion, the handler must return 0. Otherwise handler must
+     return a _n_e_w _s_i_z_e _o_f _p_o_o_l _a_f_t_e_r _s_u_c_c_e_s_s_f_u_l _e_x_t_e_n_s_i_o_n.
+
+     _I_M_P_O_R_T_A_N_T_! _T_h_e _p_o_o_l _C_A_N_N_O_T _B_E _R_E_L_O_C_A_T_E_D _I_F _I_T _C_O_N_T_A_I_N_S _A_L_L_O_C_A_T_E_D _O_B_J_E_C_T_S
+     with functions such as realloc(3).  Relocation of pool will lead to bad
+     references to the objects stored inside pointers across your program! You
+     must ensure that pool will never be relocated once used when resizing the
+     pool.  Returning a size lesser than current pool size will not lead to
+     extension of pool, the effect will be the same as if handler would return
+     0. Returned size may or may not be not aligned: the function will align
+     the new size automatically.
+
+     ssmmaalllloocc__uubb__hhaannddlleerr Undefined Behavior handler is defined as follows:
+
+             typedef void (*smalloc_ub_handler)(struct smalloc_pool *, const void *);
+             void ub_handler(struct smalloc_pool *spool, const void *offender);
+
+     It takes a pool descriptor _*_s_p_o_o_l (see _M_U_L_T_I_P_L_E _P_O_O_L_S section) and
+     _*_o_f_f_e_n_d_e_r pointer which is an exact pointer value that caused an UB
+     exception.  The task of UB handler is to report the condition as fast as
+     possible and abort the program. An UB handler can _i_g_n_o_r_e abnormal
+     condition, but it is highly discouraged.  Default UB handler embedded
+     into ssmmaalllloocc itself is to cause program crash by writing to NULL pointer.
+     It does not report condition somewhere just not to depend on libc's stdio
+     package (or something other, possibly platform specific).
+
+
+MMUULLTTIIPPLLEE PPOOOOLLSS
+     ssmmaalllloocc supports using multiple pools in parallel (but not in
+     multithreaded environment however). There are versions of described
+     functions above which names end with `_pool' suffix and have prepended
+     their first argument as _s_t_r_u_c_t _s_m_a_l_l_o_c___p_o_o_l _*, which is a pool descriptor
+     of this format:
+
+             struct smalloc_pool {
+                     void *pool;
+                     size_t pool_size;
+                     int do_zero;
+                     smalloc_oom_handler oomfn;
+             };
+
+     Manual fill of the structure is _N_O_T _R_E_C_O_M_M_E_N_D_E_D, it is best to use a pool
+     aware ssmm__sseett__ppooooll function, which is just the ssmm__sseett__ddeeffaauulltt__ppooooll variant
+     with _s_t_r_u_c_t _s_m_a_l_l_o_c___p_o_o_l _* as it's first argument.
+
+     Releasing such a pool is done with ssmm__rreelleeaassee__ppooooll, which takes _s_t_r_u_c_t
+     _s_m_a_l_l_o_c___p_o_o_l _* as it's only single argument.
+
+     Memory behind these descriptors is not allocated by ssmmaalllloocc, it is task
+     of the caller to store pool descriptors somewhere.
+
+     Then caller may turn normal functions into pool versions, for example:
+     ssmm__rreeaalllloocc(_v_o_i_d _*_p, _s_i_z_e___t _n) turns into ssmm__rreeaalllloocc__ppooooll(_s_t_r_u_c_t
+     _s_m_a_l_l_o_c___p_o_o_l _*_s_p_o_o_l, _v_o_i_d _*_p, _s_i_z_e___t _n), and so on.
+
+     There is a ssmm__aalliiggnn__ppooooll function, which takes a pool descriptor and
+     adjusts it's _p_o_o_l___s_i_z_e member to a value best fit for a ssmmaalllloocc.  This
+     function is provided only for manual fill of the pool descriptor.
+     _U_n_a_l_i_g_n_e_d _p_o_o_l _d_e_s_c_r_i_p_t_o_r_s _w_i_l_l _b_e _r_e_j_e_c_t_e_d by ssmmaalllloocc and _e_r_r_n_o will be
+     set to _E_I_N_V_A_L in such cases.
+
+
+FFIILLEESS
+     See _s_m_a_l_l_o_c_._h, _s_m_a_l_l_o_c___t_e_s_t___s_o_._c, and source code.
+
+
+EEXXAAMMPPLLEE
+     This is the minimal example of how to use the library:
+
+             #include <smalloc.h>
+
+             static char my_pool[16384];
+
+             int main(void)
+             {
+                     char *s, *d;
+                     size_t n;
+
+                     if (!sm_set_default_pool(my_pool, sizeof(my_pool), 0, NULL)) return 1;
+
+                     s = sm_malloc(40);
+                     if (s) {
+                             n = sm_szalloc(s);
+                             memset(s, 'X', n);
+                     }
+                     d = sm_malloc(700);
+                     if (d) memset(d, 'Y', sm_szalloc(d));
+                     s = sm_realloc(s, n+30);
+                     if (s) memset(s+n, 'x', sm_szalloc(s)-n);
+                     d = sm_realloc(d, 14000);
+                     if (d) memset(d, 'y', sm_szalloc(d));
+
+                     sm_free(s);
+                     sm_free(d);
+
+                     sm_release_default_pool();
+
+                     return 0;
+             }
+
+
+BBUUGGSS
+     Returned objects may or may not be aligned to be used for any kind of
+     variable. However it places objects exactly so at least integers and
+     pointers can be placed and used without harm within them.
+
+     Allocations lesser than 12 bytes on 32 bit systems (typ.) are not so
+     efficient: the object header takes 12 bytes and minimum overhead size is
+     also 12 bytes. So per each, for example, 4 byte request there will be a
+     20 byte of overhead. On 64 bit systems it's even worse, things usually
+     double.
+
+     True multithreading with locking was not implemented and is not currently
+     a planned task.
+
+     Unlike highly promoted Linux's behavior about always succeeding mmaalllloocc,
+     the memory in ssmmaalllloocc is managed directly by programmer.
+
+
+CCOONNFFOORRMMIINNGG TTOO
+     ssmm__mmaalllloocc,, ssmm__ccaalllloocc,, ssmm__rreeaalllloocc and ssmm__ffrreeee are fully compatible with
+     usual mmaalllloocc,, ccaalllloocc,, rreeaalllloocc and ffrreeee.  Their behavior on normal/failed
+     situations is same (or should be same - report a bug if not).  Programmer
+     should not bother about UB because good program does not invoke UB.
+
+     ssmm__zzaalllloocc,, ssmm__sszzaalllloocc and ssmm__aalllloocc__vvaalliidd are ssmmaalllloocc extensions. They're
+     not implemented in other malloc type packages, thus their usage is not
+     portable.
+
+
+AAUUTTHHOORRSS
+     ssmmaalllloocc was written in spare time by Andrey Rys <_r_y_s_@_l_y_n_x_l_y_n_x_._r_u> for his
+     own super(8) program. This library is available at
+     hhttttppss::////ggiittllaabb..ccoomm//llyynnxxllyynnxx//ssmmaalllloocc//, and super(8) is available at
+     hhttttppss::////ggiittllaabb..ccoomm//SSAANNEELLIINNUUXX//ssuuppeerr//.
+
+     The code, unlike any other programs written by Rys is MIT licensed:
+     _C_o_p_y_r_i_g_h_t _(_c_) _2_0_1_7 _A_n_d_r_e_y _R_y_s _<_r_y_s_@_l_y_n_x_l_y_n_x_._r_u_>.  See _C_O_P_Y_R_I_G_H_T file in
+     the source distribution for complete terms.
+
+
+SSEEEE AALLSSOO
+     malloc(3), calloc(3), free(3), realloc(3).
+
+R2                                 18Aug2017                                R2

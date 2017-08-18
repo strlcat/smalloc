@@ -20,5 +20,8 @@ smalloc_test_so.so: $(TEST_OBJS)
 	$(CROSS_COMPILE)$(CC) $(CFLAGS) $< -shared -o $@ libsmalloc.a
 	@echo Now you can test it with LD_PRELOAD=./$@ and see it works for conformant apps.
 
+docs: smalloc.3
+	mandoc -Tascii smalloc.3 >smalloc.3.txt
+
 clean:
 	rm -f *.a *.so *.o
