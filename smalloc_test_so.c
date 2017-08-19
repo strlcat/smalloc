@@ -111,6 +111,12 @@ static void *getrndbase(void)
 	return (void *)r;
 }
 
+static void xpool_ub(struct smalloc_pool *spool, const void *offender)
+{
+	errno = 0;
+	xerror(5, "%p: address is not from %p-%p range!", offender, xpool, xpool+xpool_n);
+}
+
 /* called each time we ran out of memory, in hope to get more */
 static size_t xpool_oom(struct smalloc_pool *spool, size_t n)
 {
@@ -144,6 +150,7 @@ static void init_smalloc(void)
 		void *p;
 		sc_page_size = sysconf(_SC_PAGE_SIZE);
 		if (sc_page_size == 0) sc_page_size = PAGE_SIZE;
+		sm_set_ub_handler(xpool_ub);
 _again:		p = getrndbase(); /* get random base pointer */
 		/* allocate initial base page */
 		xpool = mmap(p, sc_page_size, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0);
