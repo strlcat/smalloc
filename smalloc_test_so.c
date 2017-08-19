@@ -33,6 +33,8 @@
 #include <errno.h>
 #include "smalloc.h"
 
+static long sc_page_size;
+
 /* base pointer and size of allocated pool */
 static char *xpool;
 static size_t xpool_n;
@@ -102,7 +104,7 @@ static void *getrndbase(void)
 {
 	uintptr_t r;
 	xgetrandom(&r, sizeof(uintptr_t));
-	r &= ~(PAGE_SIZE-1);
+	r &= ~(sc_page_size-1);
 #if UINTPTR_MAX == UINT64_MAX
 	r &= 0xffffffffff;
 #endif
@@ -115,9 +117,9 @@ static size_t xpool_oom(struct smalloc_pool *spool, size_t n)
 	void *t;
 	size_t newsz;
 
-	newsz = (n / PAGE_SIZE) * PAGE_SIZE;
-	if (n % PAGE_SIZE) newsz += PAGE_SIZE;
-	if (newsz == 0) newsz += PAGE_SIZE;
+	newsz = (n / sc_page_size) * sc_page_size;
+	if (n % sc_page_size) newsz += sc_page_size;
+	if (newsz == 0) newsz += sc_page_size;
 
 	/* get new page(s) */
 	t = mmap(xpool+xpool_n, newsz,
@@ -140,19 +142,21 @@ static void init_smalloc(void)
 {
 	if (!smalloc_initialised) {
 		void *p;
+		sc_page_size = sysconf(_SC_PAGE_SIZE);
+		if (sc_page_size == 0) sc_page_size = PAGE_SIZE;
 _again:		p = getrndbase(); /* get random base pointer */
 		/* allocate initial base page */
-		xpool = mmap(p, PAGE_SIZE, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0);
+		xpool = mmap(p, sc_page_size, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0);
 		if (xpool == MAP_FAILED
 		|| xpool != p) {
 			/* try again several times */
-			if (xpool != p) munmap(p, PAGE_SIZE);
+			if (xpool != p) munmap(p, sc_page_size);
 			smalloc_initialised++;
 			if (smalloc_initialised > 10) xerror(3, "failed to map page at base = %p", p);
 			goto _again;
 		}
 		/* initial pool size == PAGE_SIZE */
-		xpool_n = PAGE_SIZE;
+		xpool_n = sc_page_size;
 
 		/* setup SMalloc to use this pool */
 		if (!sm_set_default_pool(xpool, xpool_n, 0, xpool_oom))
