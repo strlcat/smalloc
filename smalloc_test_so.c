@@ -110,9 +110,14 @@ static void *getrndbase(void)
 static size_t xpool_oom(struct smalloc_pool *spool, size_t n)
 {
 	void *t;
+	size_t newsz;
+
+	newsz = (n / PAGE_SIZE) * PAGE_SIZE;
+	if (n % PAGE_SIZE) newsz += PAGE_SIZE;
+	if (newsz == 0) newsz += PAGE_SIZE;
 
 	/* get new page */
-	t = mmap(xpool+xpool_n, PAGE_SIZE,
+	t = mmap(xpool+xpool_n, newsz,
 		PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0);
 	/* failed to get? */
 	if (t == MAP_FAILED) return 0;
@@ -123,7 +128,7 @@ static size_t xpool_oom(struct smalloc_pool *spool, size_t n)
 	}
 
 	/* success! Return new pool size */
-	xpool_n += PAGE_SIZE;
+	xpool_n += newsz;
 	return xpool_n;
 }
 
