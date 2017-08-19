@@ -3,4 +3,6 @@ _*
 *.o
 *.a
 *.so
+*.patch
+*.diff
 tags
