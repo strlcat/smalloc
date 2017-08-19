@@ -231,6 +231,10 @@ MMUULLTTIIPPLLEE PPOOOOLLSS
      _U_n_a_l_i_g_n_e_d _p_o_o_l _d_e_s_c_r_i_p_t_o_r_s _w_i_l_l _b_e _r_e_j_e_c_t_e_d by ssmmaalllloocc and _e_r_r_n_o will be
      set to _E_I_N_V_A_L in such cases.
 
+     ssmmaalllloocc__ccuurrrr__ppooooll symbol points to global pool descriptor which is used
+     by ssmm__sseett__ddeeffaauulltt__ppooooll and ssmm__rreelleeaassee__ddeeffaauulltt__ppooooll, as well as by
+     `non-pool' functions.
+
 
 FFIILLEESS
      See _s_m_a_l_l_o_c_._h, _s_m_a_l_l_o_c___t_e_s_t___s_o_._c, and source code.
@@ -314,4 +318,4 @@ AAUUTTHHOORRSS
 SSEEEE AALLSSOO
      malloc(3), calloc(3), free(3), realloc(3).
 
-R2                                 18Aug2017                                R2
+R2                                 19Aug2017                                R2

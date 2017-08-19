@@ -1,4 +1,4 @@
-.Dd 18Aug2017
+.Dd 19Aug2017
 .Dt SMALLOC 3
 .Os R2
 
@@ -375,6 +375,15 @@ and
 will be set to
 .Em EINVAL
 in such cases.
+
+.Sy smalloc_curr_pool
+symbol points to global pool descriptor which is used by
+.Sy sm_set_default_pool
+and
+.Sy sm_release_default_pool ,
+as well as by
+.Sq non-pool
+functions.
 
 .Sh FILES
 See
