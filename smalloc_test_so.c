@@ -10,7 +10,7 @@
  * extendable heap space, which is placed at
  * almost random base address at each startup.
  *
- * On each OOM situation a new page is requested.
+ * On each OOM situation new page(s) are requested.
  * These pages are never released during runtime but
  * only at program exit, and the whole space is used
  * as a "scratch space".
@@ -119,14 +119,14 @@ static size_t xpool_oom(struct smalloc_pool *spool, size_t n)
 	if (n % PAGE_SIZE) newsz += PAGE_SIZE;
 	if (newsz == 0) newsz += PAGE_SIZE;
 
-	/* get new page */
+	/* get new page(s) */
 	t = mmap(xpool+xpool_n, newsz,
 		PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0);
 	/* failed to get? */
 	if (t == MAP_FAILED) return 0;
-	/* !MAP_FIXED and there is a page on the road already? */
+	/* !MAP_FIXED and there are existing pages on the road already? */
 	if (t != xpool+xpool_n) {
-		munmap(t, PAGE_SIZE);
+		munmap(t, newsz);
 		return 0;
 	}
 
