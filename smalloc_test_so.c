@@ -37,13 +37,16 @@
 static char *xpool;
 static size_t xpool_n;
 
+static int smalloc_initialised;
+
 /* atexit call: wipe all the data out of pool */
 static void exit_smalloc(void)
 {
-	if (xpool && xpool_n) {
+	if (smalloc_initialised) {
 		sm_release_default_pool();
 		memset(xpool, 0, xpool_n);
 		munmap(xpool, xpool_n);
+		smalloc_initialised = 0;
 	}
 }
 
@@ -135,10 +138,8 @@ static size_t xpool_oom(struct smalloc_pool *spool, size_t n)
 /* single time init call: setup default pool descriptor */
 static void init_smalloc(void)
 {
-	static int done;
-	void *p;
-
-	if (!done) {
+	if (!smalloc_initialised) {
+		void *p;
 _again:		p = getrndbase(); /* get random base pointer */
 		/* allocate initial base page */
 		xpool = mmap(p, PAGE_SIZE, PROT_READ|PROT_WRITE, MAP_PRIVATE|MAP_ANONYMOUS, -1, 0);
@@ -146,8 +147,8 @@ _again:		p = getrndbase(); /* get random base pointer */
 		|| xpool != p) {
 			/* try again several times */
 			if (xpool != p) munmap(p, PAGE_SIZE);
-			done++;
-			if (done > 10) xerror(3, "failed to map page at base = %p", p);
+			smalloc_initialised++;
+			if (smalloc_initialised > 10) xerror(3, "failed to map page at base = %p", p);
 			goto _again;
 		}
 		/* initial pool size == PAGE_SIZE */
@@ -161,7 +162,7 @@ _again:		p = getrndbase(); /* get random base pointer */
 		atexit(exit_smalloc);
 
 		/* well done! */
-		done = 1;
+		smalloc_initialised = 1;
 	}
 }
 
@@ -169,26 +170,26 @@ _again:		p = getrndbase(); /* get random base pointer */
 
 void *malloc(size_t n)
 {
-	init_smalloc();
+	if (!smalloc_initialised) init_smalloc();
 	/* return sm_zalloc(n); */
 	return sm_malloc(n);
 }
 
 void free(void *p)
 {
-	init_smalloc();
+	if (!smalloc_initialised) init_smalloc();
 	sm_free(p);
 }
 
 void *realloc(void *p, size_t n)
 {
-	init_smalloc();
+	if (!smalloc_initialised) init_smalloc();
 	return sm_realloc(p, n);
 }
 
 void *calloc(size_t y, size_t x)
 {
-	init_smalloc();
+	if (!smalloc_initialised) init_smalloc();
 	return sm_calloc(y, x);
 }
 
