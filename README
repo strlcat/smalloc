@@ -91,7 +91,9 @@ SMalloc search strategy is simple pointer-size or start-length two stage search.
 First stage searches for any allocated blocks.
 Second stage searches for blocks beyond found free space.
 
-SMalloc is a header->data type memory allocator. It has no any additional protective features.
+SMalloc is a very simple allocator. It has no any additional protective features,
+nor any speedup optimisations. It is NOT suitable for general usage, but only for small projects
+which require small amounts of allocated objects and small pools.
 
 It's header consists of three numbers:
 - Real size of allocation,

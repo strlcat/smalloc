@@ -114,7 +114,7 @@ static void *getrndbase(void)
 static void xpool_ub(struct smalloc_pool *spool, const void *offender)
 {
 	errno = 0;
-	xerror(5, "%p: address is not from %p-%p range!", offender, xpool, xpool+xpool_n);
+	xerror(5, "%p: address is not from %p-%p range!", offender, xpool, xpool+spool->pool_size);
 }
 
 /* called each time we ran out of memory, in hope to get more */
