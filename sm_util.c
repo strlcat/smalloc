@@ -28,6 +28,11 @@ static int smalloc_valid_tag(struct smalloc_hdr *shdr)
 			r = smalloc_uinthash(r);
 			if (memcmp(s+x, &r, sizeof(uintptr_t)) != 0) return 0;
 		}
+		s += x; x = 0;
+		while (x < shdr->rsz - shdr->usz) {
+			if (s[x] != '\xFF') return 0;
+			x++;
+		}
 		return 1;
 	}
 	return 0;
@@ -50,11 +55,11 @@ void sm_set_ub_handler(smalloc_ub_handler handler)
 int smalloc_is_alloc(struct smalloc_pool *spool, struct smalloc_hdr *shdr)
 {
 	if (!smalloc_check_bounds(spool, shdr)) return 0;
-	if (!smalloc_valid_tag(shdr)) return 0;
 	if (shdr->rsz == 0) return 0;
 	if (shdr->rsz > SIZE_MAX) return 0;
 	if (shdr->usz > SIZE_MAX) return 0;
 	if (shdr->usz > shdr->rsz) return 0;
 	if (shdr->rsz % HEADER_SZ) return 0;
+	if (!smalloc_valid_tag(shdr)) return 0;
 	return 1;
 }

@@ -78,6 +78,7 @@ outfound:		if (found) {
 					tag = smalloc_uinthash(tag);
 					memcpy(s+x, &tag, sizeof(uintptr_t));
 				}
+				memset(s+x, 0xff, shdr->rsz - shdr->usz);
 				return HEADER_TO_USER(shdr);
 			}
 
