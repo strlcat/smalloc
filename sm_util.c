@@ -17,8 +17,17 @@ static int smalloc_check_bounds(struct smalloc_pool *spool, struct smalloc_hdr *
 
 static int smalloc_valid_tag(struct smalloc_hdr *shdr)
 {
+	char *s;
 	uintptr_t r = smalloc_mktag(shdr);
-	if (shdr->tag == r) return 1;
+	size_t x;
+
+	if (shdr->tag == r) {
+		s = CHAR_PTR(HEADER_TO_USER(shdr));
+		s += shdr->usz;
+		for (x = 0; x < sizeof(struct smalloc_hdr); x += sizeof(shdr->tag))
+			if (memcmp(s+x, &shdr->tag, sizeof(shdr->tag)) != 0) return 0;
+		return 1;
+	}
 	return 0;
 }
 

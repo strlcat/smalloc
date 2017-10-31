@@ -29,7 +29,7 @@ again:	if (!smalloc_verify_pool(spool)) {
 		 * Skip it by jumping over it.
 		 */
 		if (smalloc_is_alloc(spool, shdr)) {
-			s = CHAR_PTR(shdr);
+			s = CHAR_PTR(HEADER_TO_USER(shdr));
 			s += shdr->rsz + HEADER_SZ;
 			shdr = HEADER_PTR(s);
 			continue;
@@ -55,7 +55,8 @@ again:	if (!smalloc_verify_pool(spool)) {
 				 * but this free block is of enough size
 				 * - finally, use it.
 				 */
-				if (n <= x) {
+				if (n + HEADER_SZ <= x) {
+					x -= HEADER_SZ;
 					found = 1;
 					goto outfound;
 				}
@@ -68,6 +69,10 @@ outfound:		if (found) {
 				shdr->usz = n;
 				shdr->tag = smalloc_mktag(shdr);
 				if (spool->do_zero) memset(HEADER_TO_USER(shdr), 0, shdr->rsz);
+				s = CHAR_PTR(HEADER_TO_USER(shdr));
+				s += shdr->usz;
+				for (x = 0; x < sizeof(struct smalloc_hdr); x += sizeof(shdr->tag))
+					memcpy(s+x, &shdr->tag, sizeof(shdr->tag));
 				return HEADER_TO_USER(shdr);
 			}
 

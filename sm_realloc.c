@@ -10,6 +10,7 @@ void *sm_realloc_pool(struct smalloc_pool *spool, void *p, size_t n)
 {
 	struct smalloc_hdr *basehdr, *shdr, *dhdr;
 	void *r;
+	char *s;
 	int found;
 	size_t rsz, usz, x;
 
@@ -32,16 +33,35 @@ void *sm_realloc_pool(struct smalloc_pool *spool, void *p, size_t n)
 
 	/* newsize is lesser than allocated - truncate */
 	if (n <= usz) {
+		if (spool->do_zero) {
+			s = CHAR_PTR(HEADER_TO_USER(shdr));
+			s += shdr->usz;
+			memset(s, 0, HEADER_SZ);
+			memset(p + n, 0, shdr->rsz - n);
+		}
+		shdr->rsz = (n%HEADER_SZ)?(((n/HEADER_SZ)+1)*HEADER_SZ):n;
 		shdr->usz = n;
 		shdr->tag = smalloc_mktag(shdr);
-		if (spool->do_zero) memset(p + shdr->usz, 0, shdr->rsz - shdr->usz);
+		s = CHAR_PTR(HEADER_TO_USER(shdr));
+		s += shdr->usz;
+		for (x = 0; x < sizeof(struct smalloc_hdr); x += sizeof(shdr->tag))
+			memcpy(s+x, &shdr->tag, sizeof(shdr->tag));
 		return p;
 	}
 
 	/* newsize is bigger than allocated, but there is free room - modify */
 	if (n > usz && n <= rsz) {
+		if (spool->do_zero) {
+			s = CHAR_PTR(HEADER_TO_USER(shdr));
+			s += shdr->usz;
+			memset(s, 0, HEADER_SZ);
+		}
 		shdr->usz = n;
 		shdr->tag = smalloc_mktag(shdr);
+		s = CHAR_PTR(HEADER_TO_USER(shdr));
+		s += shdr->usz;
+		for (x = 0; x < sizeof(struct smalloc_hdr); x += sizeof(shdr->tag))
+			memcpy(s+x, &shdr->tag, sizeof(shdr->tag));
 		return p;
 	}
 
@@ -51,7 +71,8 @@ void *sm_realloc_pool(struct smalloc_pool *spool, void *p, size_t n)
 		x = CHAR_PTR(dhdr)-CHAR_PTR(shdr);
 		if (smalloc_is_alloc(spool, dhdr))
 			goto allocblock;
-		if (n <= x) {
+		if (n + HEADER_SZ <= x) {
+			x -= HEADER_SZ;
 			found = 1;
 			goto outfound;
 		}
@@ -61,9 +82,18 @@ void *sm_realloc_pool(struct smalloc_pool *spool, void *p, size_t n)
 outfound:
 	/* write new numbers of same allocation */
 	if (found) {
+		if (spool->do_zero) {
+			s = CHAR_PTR(HEADER_TO_USER(shdr));
+			s += shdr->usz;
+			memset(s, 0, HEADER_SZ);
+		}
 		shdr->rsz = x;
 		shdr->usz = n;
 		shdr->tag = smalloc_mktag(shdr);
+		s = CHAR_PTR(HEADER_TO_USER(shdr));
+		s += shdr->usz;
+		for (x = 0; x < sizeof(struct smalloc_hdr); x += sizeof(shdr->tag))
+			memcpy(s+x, &shdr->tag, sizeof(shdr->tag));
 		return p;
 	}
 
