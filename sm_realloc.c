@@ -13,6 +13,7 @@ void *sm_realloc_pool(struct smalloc_pool *spool, void *p, size_t n)
 	char *s;
 	int found;
 	size_t rsz, usz, x;
+	uintptr_t tag;
 
 	if (!smalloc_verify_pool(spool)) {
 		errno = EINVAL;
@@ -41,11 +42,13 @@ void *sm_realloc_pool(struct smalloc_pool *spool, void *p, size_t n)
 		}
 		shdr->rsz = (n%HEADER_SZ)?(((n/HEADER_SZ)+1)*HEADER_SZ):n;
 		shdr->usz = n;
-		shdr->tag = smalloc_mktag(shdr);
+		shdr->tag = tag = smalloc_mktag(shdr);
 		s = CHAR_PTR(HEADER_TO_USER(shdr));
 		s += shdr->usz;
-		for (x = 0; x < sizeof(struct smalloc_hdr); x += sizeof(shdr->tag))
-			memcpy(s+x, &shdr->tag, sizeof(shdr->tag));
+		for (x = 0; x < sizeof(struct smalloc_hdr); x += sizeof(shdr->tag)) {
+			tag = smalloc_uinthash(tag);
+			memcpy(s+x, &tag, sizeof(uintptr_t));
+		}
 		return p;
 	}
 
@@ -57,11 +60,13 @@ void *sm_realloc_pool(struct smalloc_pool *spool, void *p, size_t n)
 			memset(s, 0, HEADER_SZ);
 		}
 		shdr->usz = n;
-		shdr->tag = smalloc_mktag(shdr);
+		shdr->tag = tag = smalloc_mktag(shdr);
 		s = CHAR_PTR(HEADER_TO_USER(shdr));
 		s += shdr->usz;
-		for (x = 0; x < sizeof(struct smalloc_hdr); x += sizeof(shdr->tag))
-			memcpy(s+x, &shdr->tag, sizeof(shdr->tag));
+		for (x = 0; x < sizeof(struct smalloc_hdr); x += sizeof(shdr->tag)) {
+			tag = smalloc_uinthash(tag);
+			memcpy(s+x, &tag, sizeof(uintptr_t));
+		}
 		return p;
 	}
 
@@ -89,11 +94,13 @@ outfound:
 		}
 		shdr->rsz = x;
 		shdr->usz = n;
-		shdr->tag = smalloc_mktag(shdr);
+		shdr->tag = tag = smalloc_mktag(shdr);
 		s = CHAR_PTR(HEADER_TO_USER(shdr));
 		s += shdr->usz;
-		for (x = 0; x < sizeof(struct smalloc_hdr); x += sizeof(shdr->tag))
-			memcpy(s+x, &shdr->tag, sizeof(shdr->tag));
+		for (x = 0; x < sizeof(struct smalloc_hdr); x += sizeof(shdr->tag)) {
+			tag = smalloc_uinthash(tag);
+			memcpy(s+x, &tag, sizeof(uintptr_t));
+		}
 		return p;
 	}
 

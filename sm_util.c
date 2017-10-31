@@ -24,8 +24,10 @@ static int smalloc_valid_tag(struct smalloc_hdr *shdr)
 	if (shdr->tag == r) {
 		s = CHAR_PTR(HEADER_TO_USER(shdr));
 		s += shdr->usz;
-		for (x = 0; x < sizeof(struct smalloc_hdr); x += sizeof(shdr->tag))
-			if (memcmp(s+x, &shdr->tag, sizeof(shdr->tag)) != 0) return 0;
+		for (x = 0; x < sizeof(struct smalloc_hdr); x += sizeof(shdr->tag)) {
+			r = smalloc_uinthash(r);
+			if (memcmp(s+x, &r, sizeof(uintptr_t)) != 0) return 0;
+		}
 		return 1;
 	}
 	return 0;

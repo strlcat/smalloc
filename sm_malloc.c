@@ -64,15 +64,20 @@ again:	if (!smalloc_verify_pool(spool)) {
 			}
 
 outfound:		if (found) {
+				uintptr_t tag;
 				/* allocate and return this block */
 				shdr->rsz = x;
 				shdr->usz = n;
-				shdr->tag = smalloc_mktag(shdr);
+				shdr->tag = tag = smalloc_mktag(shdr);
 				if (spool->do_zero) memset(HEADER_TO_USER(shdr), 0, shdr->rsz);
 				s = CHAR_PTR(HEADER_TO_USER(shdr));
 				s += shdr->usz;
-				for (x = 0; x < sizeof(struct smalloc_hdr); x += sizeof(shdr->tag))
-					memcpy(s+x, &shdr->tag, sizeof(shdr->tag));
+				for (x = 0;
+				x < sizeof(struct smalloc_hdr);
+				x += sizeof(shdr->tag)) {
+					tag = smalloc_uinthash(tag);
+					memcpy(s+x, &tag, sizeof(uintptr_t));
+				}
 				return HEADER_TO_USER(shdr);
 			}
 
