@@ -157,7 +157,7 @@ _again:		p = getrndbase(); /* get random base pointer */
 		if (xpool == MAP_FAILED
 		|| xpool != p) {
 			/* try again several times */
-			if (xpool != p) munmap(p, sc_page_size);
+			if (xpool != p && xpool != MAP_FAILED) munmap(p, sc_page_size);
 			smalloc_initialised++;
 			if (smalloc_initialised > 10) xerror(3, "failed to map page at base = %p", p);
 			goto _again;
