@@ -7,6 +7,12 @@ LIB_OBJS = $(filter-out smalloc_test_so.o, $(SRCS:.c=.o))
 TEST_OBJS = smalloc_test_so.o
 override CFLAGS += -Wall -fPIC
 
+ifneq (,$(DEBUG))
+override CFLAGS+=-O0 -g
+else
+override CFLAGS+=-O2
+endif
+
 all: $(LIB_OBJS) libsmalloc.a
 
 %.o: %.c
