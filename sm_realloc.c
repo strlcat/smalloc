@@ -36,16 +36,16 @@ void *sm_realloc_pool(struct smalloc_pool *spool, void *p, size_t n)
 	if (n <= usz) {
 		if (spool->do_zero) memset(p + n, 0, shdr->rsz - n);
 		s = CHAR_PTR(HEADER_TO_USER(shdr));
-		s += shdr->usz;
+		s += usz;
 		memset(s, 0, HEADER_SZ);
-		if (spool->do_zero) memset(s+HEADER_SZ, 0, shdr->rsz - shdr->usz);
+		if (spool->do_zero) memset(s+HEADER_SZ, 0, rsz - usz);
 		if (!spool->do_zero) memcpy(s, "FREEDBARRIER", 12);
 		shdr->rsz = (n%HEADER_SZ)?(((n/HEADER_SZ)+1)*HEADER_SZ):n;
 		shdr->usz = n;
 		shdr->tag = tag = smalloc_mktag(shdr);
 		s = CHAR_PTR(HEADER_TO_USER(shdr));
 		s += shdr->usz;
-		for (x = 0; x < sizeof(struct smalloc_hdr); x += sizeof(shdr->tag)) {
+		for (x = 0; x < sizeof(struct smalloc_hdr); x += sizeof(uintptr_t)) {
 			tag = smalloc_uinthash(tag);
 			memcpy(s+x, &tag, sizeof(uintptr_t));
 		}
@@ -57,14 +57,14 @@ void *sm_realloc_pool(struct smalloc_pool *spool, void *p, size_t n)
 	if (n > usz && n <= rsz) {
 		if (spool->do_zero) {
 			s = CHAR_PTR(HEADER_TO_USER(shdr));
-			s += shdr->usz;
+			s += usz;
 			memset(s, 0, HEADER_SZ);
 		}
 		shdr->usz = n;
 		shdr->tag = tag = smalloc_mktag(shdr);
 		s = CHAR_PTR(HEADER_TO_USER(shdr));
 		s += shdr->usz;
-		for (x = 0; x < sizeof(struct smalloc_hdr); x += sizeof(shdr->tag)) {
+		for (x = 0; x < sizeof(struct smalloc_hdr); x += sizeof(uintptr_t)) {
 			tag = smalloc_uinthash(tag);
 			memcpy(s+x, &tag, sizeof(uintptr_t));
 		}
@@ -91,15 +91,16 @@ outfound:
 	if (found) {
 		if (spool->do_zero) {
 			s = CHAR_PTR(HEADER_TO_USER(shdr));
-			s += shdr->usz;
+			s += usz;
 			memset(s, 0, HEADER_SZ);
+			memset(s+HEADER_SZ, 0, rsz - usz);
 		}
 		shdr->rsz = x;
 		shdr->usz = n;
 		shdr->tag = tag = smalloc_mktag(shdr);
 		s = CHAR_PTR(HEADER_TO_USER(shdr));
 		s += shdr->usz;
-		for (x = 0; x < sizeof(struct smalloc_hdr); x += sizeof(shdr->tag)) {
+		for (x = 0; x < sizeof(struct smalloc_hdr); x += sizeof(uintptr_t)) {
 			tag = smalloc_uinthash(tag);
 			memcpy(s+x, &tag, sizeof(uintptr_t));
 		}

@@ -74,7 +74,7 @@ outfound:		if (found) {
 				s += shdr->usz;
 				for (x = 0;
 				x < sizeof(struct smalloc_hdr);
-				x += sizeof(shdr->tag)) {
+				x += sizeof(uintptr_t)) {
 					tag = smalloc_uinthash(tag);
 					memcpy(s+x, &tag, sizeof(uintptr_t));
 				}
