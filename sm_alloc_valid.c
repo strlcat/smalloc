@@ -10,6 +10,11 @@ int sm_alloc_valid_pool(struct smalloc_pool *spool, const void *p)
 {
 	struct smalloc_hdr *shdr;
 
+	if (!smalloc_verify_pool(spool)) {
+		errno = EINVAL;
+		return 0;
+	}
+
 	if (!p) return 0;
 
 	shdr = USER_TO_HEADER(p);
