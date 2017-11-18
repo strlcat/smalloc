@@ -6,7 +6,7 @@
 
 #include "smalloc_i.h"
 
-void *sm_realloc_pool(struct smalloc_pool *spool, void *p, size_t n)
+static void *__sm_realloc_pool(struct smalloc_pool *spool, void *p, size_t n, int nomove)
 {
 	struct smalloc_hdr *basehdr, *shdr, *dhdr;
 	void *r;
@@ -110,6 +110,11 @@ outfound:
 
 allocblock:
 	/* newsize is bigger than allocated and no free space - move */
+	if (nomove) {
+		/* fail if user asked */
+		errno = ERANGE;
+		return NULL;
+	}
 	r = sm_malloc_pool(spool, n);
 	if (!r) return NULL;
 	memcpy(r, p, usz);
@@ -118,7 +123,22 @@ allocblock:
 	return r;
 }
 
+void *sm_realloc_pool(struct smalloc_pool *spool, void *p, size_t n)
+{
+	return __sm_realloc_pool(spool, p, n, 0);
+}
+
+void *sm_realloc_move_pool(struct smalloc_pool *spool, void *p, size_t n)
+{
+	return __sm_realloc_pool(spool, p, n, 1);
+}
+
 void *sm_realloc(void *p, size_t n)
 {
-	return sm_realloc_pool(&smalloc_curr_pool, p, n);
+	return __sm_realloc_pool(&smalloc_curr_pool, p, n, 0);
+}
+
+void *sm_realloc_move(void *p, size_t n)
+{
+	return __sm_realloc_pool(&smalloc_curr_pool, p, n, 1);
 }
