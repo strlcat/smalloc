@@ -34,4 +34,6 @@ uintptr_t smalloc_mktag(struct smalloc_hdr *shdr);
 int smalloc_verify_pool(struct smalloc_pool *spool);
 int smalloc_is_alloc(struct smalloc_pool *spool, struct smalloc_hdr *shdr);
 
+void *sm_realloc_pool_i(struct smalloc_pool *spool, void *p, size_t n, int nomove);
+
 #endif
