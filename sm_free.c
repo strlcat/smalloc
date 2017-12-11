@@ -26,10 +26,6 @@ void sm_free_pool(struct smalloc_pool *spool, void *p)
 		memset(s, 0, HEADER_SZ);
 		if (spool->do_zero) memset(s+HEADER_SZ, 0, shdr->rsz - shdr->usz);
 		memset(shdr, 0, HEADER_SZ);
-		if (!spool->do_zero) {
-			memcpy(shdr, "FREED MEMORY", 12);
-			memcpy(s, "FREEDBARRIER", 12);
-		}
 		return;
 	}
 

@@ -44,7 +44,6 @@ void *sm_realloc_pool_i(struct smalloc_pool *spool, void *p, size_t n, int nomov
 		s += usz;
 		memset(s, 0, HEADER_SZ);
 		if (spool->do_zero) memset(s+HEADER_SZ, 0, rsz - usz);
-		if (!spool->do_zero) memcpy(s, "FREEDBARRIER", 12);
 		shdr->rsz = (n%HEADER_SZ)?(((n/HEADER_SZ)+1)*HEADER_SZ):n;
 		shdr->usz = n;
 		shdr->tag = tag = smalloc_mktag(shdr);
