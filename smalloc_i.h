@@ -9,6 +9,7 @@
 
 #include "smalloc.h"
 #include <string.h>
+#include <limits.h>
 #include <errno.h>
 
 struct smalloc_hdr {
