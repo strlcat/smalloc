@@ -44,7 +44,7 @@ SMalloc still will not permit you to do these things however:
 
 ## But why?
 
-SMalloc is a design decision for my own long term project - super(8).
+SMalloc is a design decision for my own long term project - access(8).
 This program had a silly static memory allocator in past, which used large and small static arrays
 of fixed lengths and this approach was really simple, but too memory wasteful of course.
 Because super is not so large and does not do much of large memory allocations I seriously
@@ -133,7 +133,7 @@ There will be no support for that.
 ## Conclusion
 
 I hope SMalloc will find it's way into many projects outside of the camp it was developed for.
-Possible area to use it is an embedded world or other small projects like author's super(8).
+Possible area to use it is an embedded world or other small projects like author's access(8).
 It may fill the gap or remain mostly unknown, but I hope it will be less buggy in future :-)
 
 SMalloc was written by Andrey "ElectroRys" Rys during Aug2017.

@@ -3,9 +3,9 @@ SMALLOC(3)                 Library Functions Manual                 SMALLOC(3)
 
 
 NNAAMMEE
-     ssmmaalllloocc : sm_malloc, sm_zalloc, sm_free, sm_realloc, sm_calloc,
-     sm_szalloc - allocate, manage, resize, query size and free dynamic memory
-     which is allocated from user pointed static memory area;
+     ssmmaalllloocc : sm_malloc, sm_zalloc, sm_free, sm_realloc, sm_realloc_move,
+     sm_calloc, sm_szalloc - allocate, manage, resize, query size and free
+     dynamic memory which is allocated from user pointed static memory area;
 
      sm_alloc_valid - query object validity;
 
@@ -27,6 +27,8 @@ SSYYNNOOPPSSIISS
      vvooiidd ssmm__ffrreeee(_v_o_i_d _*_p);
 
      vvooiidd **ssmm__rreeaalllloocc(_v_o_i_d _*_p, _s_i_z_e___t _n);
+
+     vvooiidd **ssmm__rreeaalllloocc__mmoovvee(_v_o_i_d _*_p, _s_i_z_e___t _n);
 
      vvooiidd **ssmm__ccaalllloocc(_s_i_z_e___t _y, _s_i_z_e___t _x);
 
@@ -61,6 +63,9 @@ DDEESSCCRRIIPPTTIIOONN
 
      ssmm__rreeaalllloocc change already allocated object size, but also can be used to
      allocate and free memory too.
+
+     ssmm__rreeaalllloocc__mmoovvee works like ssmm__rreeaalllloocc, but fails if physical reallocation
+     (move) of the object is required.
 
      ssmm__ffrreeee deallocates ssmmaalllloocc allocated memory.
 
@@ -110,15 +115,20 @@ RREETTUURRNN VVAALLUUEE
      and _n is 0, then the call is equivalent to ssmm__ffrreeee(_p).  On failure to
      relocate or size change, it will return _N_U_L_L and set _e_r_r_n_o to _E_N_O_M_E_M.
 
+     ssmm__rreeaalllloocc__mmoovvee works exactly as ssmm__rreeaalllloocc, but fails if physical
+     reallocation (move) of the object is required. In such case, _N_U_L_L is
+     returned and _e_r_r_n_o is set to _E_R_A_N_G_E.  Original object of question is not
+     touched, it's size is not changed and it can be used as before.
+
      ssmm__ffrreeee does not return a value, but may change _e_r_r_n_o in cases described
      in _N_O_T_E_S section.
 
      ssmm__sszzaalllloocc return an exact object size of object pointed to by _p (the
-     argument _n passed to any of: ssmm__mmaalllloocc,, ssmm__zzaalllloocc,, ssmm__rreeaalllloocc and _y _* _x
-     result of ssmm__ccaalllloocc) _T_h_i_s _i_s _t_h_e _o_n_l_y _p_e_r_m_i_t_t_e_d _a_r_e_a _t_h_a_t _t_h_e _c_a_l_l_e_r _m_a_y
-     _u_s_e_. For _N_U_L_L as argument, ssmm__sszzaalllloocc returns 0.  For unique object of 0
-     size created with ssmm__mmaalllloocc(_0) (or equivalent), the return value is 1,
-     _b_u_t _t_h_i_s _m_a_y _b_e _c_h_a_n_g_e_d _i_n _f_u_t_u_r_e.
+     argument _n passed to any of: ssmm__mmaalllloocc,, ssmm__zzaalllloocc,, ssmm__rreeaalllloocc,,
+     ssmm__rreeaalllloocc__mmoovvee and _y _* _x result of ssmm__ccaalllloocc) _T_h_i_s _i_s _t_h_e _o_n_l_y _p_e_r_m_i_t_t_e_d
+     _a_r_e_a _t_h_a_t _t_h_e _c_a_l_l_e_r _m_a_y _u_s_e_. For _N_U_L_L as argument, ssmm__sszzaalllloocc returns 0.
+     For unique object of 0 size created with ssmm__mmaalllloocc(_0) (or equivalent),
+     the return value is 1, _b_u_t _t_h_i_s _m_a_y _b_e _c_h_a_n_g_e_d _i_n _f_u_t_u_r_e.
 
      ssmm__aalllloocc__vvaalliidd returns 1 if object pointed to by _p is valid reference, 0
      otherwise. It does not permit to differentiate between multiple pools.
@@ -299,16 +309,16 @@ CCOONNFFOORRMMIINNGG TTOO
      situations is same (or should be same - report a bug if not).  Programmer
      should not bother about UB because good program does not invoke UB.
 
-     ssmm__zzaalllloocc,, ssmm__sszzaalllloocc and ssmm__aalllloocc__vvaalliidd are ssmmaalllloocc extensions. They're
-     not implemented in other malloc type packages, thus their usage is not
-     portable.
+     ssmm__zzaalllloocc,, ssmm__sszzaalllloocc,, ssmm__rreeaalllloocc__mmoovvee and ssmm__aalllloocc__vvaalliidd are ssmmaalllloocc
+     extensions. They're not implemented in other malloc type packages, thus
+     their usage is not portable.
 
 
 AAUUTTHHOORRSS
      ssmmaalllloocc was written in spare time by Andrey Rys <_r_y_s_@_l_y_n_x_l_y_n_x_._r_u> for his
-     own super(8) program. This library is available at
-     hhttttppss::////ggiittllaabb..ccoomm//llyynnxxllyynnxx//ssmmaalllloocc//, and super(8) is available at
-     hhttttppss::////ggiittllaabb..ccoomm//SSAANNEELLIINNUUXX//ssuuppeerr//.
+     own access(8) program. This library is available at
+     hhttttppss::////ggiitthhuubb..ccoomm//llyynnxxllyynnxx//ssmmaalllloocc//, and access(8) is available at
+     hhttttppss::////ggiitthhuubb..ccoomm//llyynnxxllyynnxx//aacccceessss//.
 
      The code, unlike any other programs written by Rys is MIT licensed:
      _C_o_p_y_r_i_g_h_t _(_c_) _2_0_1_7 _A_n_d_r_e_y _R_y_s _<_r_y_s_@_l_y_n_x_l_y_n_x_._r_u_>.  See _C_O_P_Y_R_I_G_H_T file in
