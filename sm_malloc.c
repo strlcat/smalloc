@@ -22,7 +22,7 @@ again:	if (!smalloc_verify_pool(spool)) {
 	if (n > SIZE_MAX
 	|| n > (spool->pool_size - HEADER_SZ)) goto oom;
 
-	shdr = basehdr = spool->pool;
+	shdr = basehdr = (struct smalloc_hdr *)spool->pool;
 	while (CHAR_PTR(shdr)-CHAR_PTR(basehdr) < spool->pool_size) {
 		/*
 		 * Already allocated block.

@@ -23,7 +23,7 @@ int sm_malloc_stats_pool(struct smalloc_pool *spool, size_t *total, size_t *user
 	if (free) *free = 0;
 	if (nr_blocks) *nr_blocks = 0;
 
-	shdr = basehdr = spool->pool;
+	shdr = basehdr = (struct smalloc_hdr *)spool->pool;
 	while (CHAR_PTR(shdr)-CHAR_PTR(basehdr) < spool->pool_size) {
 		if (smalloc_is_alloc(spool, shdr)) {
 			if (total) *total += HEADER_SZ + shdr->rsz + HEADER_SZ;

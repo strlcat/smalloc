@@ -39,7 +39,7 @@ void *sm_realloc_pool_i(struct smalloc_pool *spool, void *p, size_t n, int nomov
 
 	/* newsize is lesser than allocated - truncate */
 	if (n <= usz) {
-		if (spool->do_zero) memset(p + n, 0, shdr->rsz - n);
+		if (spool->do_zero) memset((char *)p + n, 0, shdr->rsz - n);
 		s = CHAR_PTR(HEADER_TO_USER(shdr));
 		s += usz;
 		memset(s, 0, HEADER_SZ);
@@ -77,7 +77,7 @@ void *sm_realloc_pool_i(struct smalloc_pool *spool, void *p, size_t n, int nomov
 	}
 
 	/* newsize is bigger, larger than rsz but there are free blocks beyond - extend */
-	basehdr = spool->pool; dhdr = shdr+(rsz/HEADER_SZ); found = 0;
+	basehdr = (struct smalloc_hdr *)spool->pool; dhdr = shdr+(rsz/HEADER_SZ); found = 0;
 	while (CHAR_PTR(dhdr)-CHAR_PTR(basehdr) < spool->pool_size) {
 		x = CHAR_PTR(dhdr)-CHAR_PTR(shdr);
 		if (smalloc_is_alloc(spool, dhdr))

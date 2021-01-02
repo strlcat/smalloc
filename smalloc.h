@@ -11,6 +11,10 @@
 #ifndef _SMALLOC_H
 #define _SMALLOC_H
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 #include <stddef.h>
 #include <stdint.h>
 
@@ -73,5 +77,9 @@ size_t sm_szalloc(const void *); /* get size of allocation */
  * any of pointers maybe set to NULL, but at least one must be non NULL.
  */
 int sm_malloc_stats(size_t *, size_t *, size_t *, int *);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif
