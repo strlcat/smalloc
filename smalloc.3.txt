@@ -162,7 +162,7 @@ NNOOTTEESS
      overriden with ssmm__sseett__uubb__hhaannddlleerr for a lifetime of program until next
      call to this function.  ssmm__aalllloocc__vvaalliidd does not call UB handler in case
      of invalid pointer reference: it was specially designed to answer the
-     question: ``Is this pointer a valid object reference?''
+     question: "Is this pointer a valid object reference?"
 
      One can implement a classic but more precise malloc on top of ssmmaalllloocc by
      using brk(2) as a custom heap and extending it on each OOM handler call.
@@ -315,10 +315,8 @@ CCOONNFFOORRMMIINNGG TTOO
 
 
 AAUUTTHHOORRSS
-     ssmmaalllloocc was written in spare time by Andrey Rys <_r_y_s_@_l_y_n_x_l_y_n_x_._r_u> for his
-     own access(8) program. This library is available at
-     hhttttppss::////ggiitthhuubb..ccoomm//llyynnxxllyynnxx//ssmmaalllloocc//, and access(8) is available at
-     hhttttppss::////ggiitthhuubb..ccoomm//llyynnxxllyynnxx//aacccceessss//.
+     ssmmaalllloocc was written in spare time by Andrey Rys <_r_y_s_@_l_y_n_x_l_y_n_x_._r_u> This
+     library is available at hhttttppss::////ggiitthhuubb..ccoomm//eelleeccttrroorryyss//ssmmaalllloocc//.
 
      The code, unlike any other programs written by Rys is MIT licensed:
      _C_o_p_y_r_i_g_h_t _(_c_) _2_0_1_7 _A_n_d_r_e_y _R_y_s _<_r_y_s_@_l_y_n_x_l_y_n_x_._r_u_>.  See _C_O_P_Y_R_I_G_H_T file in

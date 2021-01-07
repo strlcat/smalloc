@@ -137,7 +137,7 @@ Possible area to use it is an embedded world or other small projects like author
 It may fill the gap or remain mostly unknown, but I hope it will be less buggy in future :-)
 
 SMalloc was written by Andrey "ElectroRys" Rys during Aug2017.
-Contact: rys@lynxlynx.ru; https://gitlab.com/lynxlynx
+Contact: rys@lynxlynx.ru; https://gitlab.com/electrorys
 
 ## Licensing
 
@@ -151,5 +151,3 @@ turn it's brains insane and send a signal through optocoupler driver to a power 
 which will lead this power to you. Anything then can happen :-)
 
 For full reuse conditions see COPYRIGHT file.
-
--- EL, 13Aug2017.
