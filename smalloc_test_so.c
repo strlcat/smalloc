@@ -33,6 +33,10 @@
 #include <errno.h>
 #include "smalloc.h"
 
+#ifndef PAGE_SIZE
+#define PAGE_SIZE 4096
+#endif
+
 static long sc_page_size;
 
 /* base pointer and size of allocated pool */
