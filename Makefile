@@ -16,7 +16,7 @@ endif
 all: $(LIB_OBJS) libsmalloc.a
 
 %.o: %.c
-	$(CROSS_COMPILE)$(CC) $(CFLAGS) -c -o $@ $<
+	$(CROSS_COMPILE)$(CC) $(CFLAGS) -I. -c -o $@ $<
 
 libsmalloc.a: $(LIB_OBJS)
 	$(CROSS_COMPILE)$(AR) cru $@ *.o

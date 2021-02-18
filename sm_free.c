@@ -9,23 +9,38 @@
 void sm_free_pool(struct smalloc_pool *spool, void *p)
 {
 	struct smalloc_hdr *shdr;
+	struct smalloc_stats *sstats;
 	char *s;
+	size_t rsz, usz;
 
 	if (!smalloc_verify_pool(spool)) {
 		errno = EINVAL;
 		return;
 	}
+	sstats = &spool->sp_stats;
 
 	if (!p) return;
 
 	shdr = USER_TO_HEADER(p);
 	if (smalloc_is_alloc(spool, shdr)) {
-		if (spool->do_zero) memset(p, 0, shdr->rsz);
+		usz = shdr->shdr_size;
+		rsz = REAL_SIZE(usz);
+		if (spool->sp_do_zero) memset(p, 0, rsz);
 		s = CHAR_PTR(p);
-		s += shdr->usz;
-		memset(s, 0, HEADER_SZ);
-		if (spool->do_zero) memset(s+HEADER_SZ, 0, shdr->rsz - shdr->usz);
+		s += rsz;
+		memset(HEADER_PTR(s), 0, HEADER_SZ);
 		memset(shdr, 0, HEADER_SZ);
+
+		if (sstats->ss_oobsz > 0) {
+			size_t total = TOTAL_SIZE(usz);
+			sstats->ss_total -= total;
+			sstats->ss_rfree += total;
+			sstats->ss_efree = sstats->ss_rfree-sstats->ss_oobsz;
+			sstats->ss_ruser -= rsz;
+			sstats->ss_euser -= usz;
+			sstats->ss_blkcnt--;
+		}
+
 		return;
 	}
 
