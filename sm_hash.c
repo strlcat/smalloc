@@ -32,7 +32,9 @@ uintptr_t smalloc_uinthash(uintptr_t x)
 uintptr_t smalloc_mktag(struct smalloc_hdr *shdr)
 {
 	uintptr_t r = smalloc_uinthash(PTR_UINT(shdr));
-	r += shdr->shdr_size;
+	r += shdr->rsz;
+	r = smalloc_uinthash(r);
+	r += shdr->usz;
 	r = smalloc_uinthash(r);
 	return r;
 }

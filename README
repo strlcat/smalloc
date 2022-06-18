@@ -1,16 +1,3 @@
-***** WIP *****
-
-This code is in progress of refactoring. If something broke (almost certainly), rewind by
-two commits back to stable version:
-
-	git checkout HEAD~2
-
-, which is tested and 100% working.
-
-Yeah, I could do this with git fuss, but I'm too lazy and progress stale. Sorry.
-
-***** WIP *****
-
 SMalloc -- a *static* memory allocator.
 
 SMalloc allows you to use an arbitrary memory array, which is allocated

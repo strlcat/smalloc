@@ -6,25 +6,6 @@
 
 #include "smalloc_i.h"
 
-#define UPDATE_STATS(usub, rsub, uadd, radd)					\
-	do {									\
-		if (sstats->ss_oobsz > 0) {					\
-			size_t stot, atot;					\
-			stot = TOTAL_SIZE(usub);				\
-			atot = TOTAL_SIZE(uadd);				\
-			sstats->ss_total -= stot;				\
-			sstats->ss_total += atot;				\
-			sstats->ss_rfree += stot;				\
-			sstats->ss_rfree -= atot;				\
-			sstats->ss_efree = sstats->ss_rfree-sstats->ss_oobsz;	\
-			sstats->ss_ruser -= rsub;				\
-			sstats->ss_ruser += radd;				\
-			sstats->ss_euser -= usub;				\
-			sstats->ss_euser += uadd;				\
-			/* sstats->ss_blkcnt is unchanged */			\
-		}								\
-	} while (0)
-
 /*
  * Please do NOT use this function directly or rely on it's presence.
  * It may go away in future SMalloc versions, or it's calling
@@ -33,12 +14,11 @@
 void *sm_realloc_pool_i(struct smalloc_pool *spool, void *p, size_t n, int nomove)
 {
 	struct smalloc_hdr *basehdr, *shdr, *dhdr;
-	struct smalloc_stats *sstats;
-	size_t rsz, orsz, usz, x;
-	uintptr_t tag;
-	int found;
-	char *s, *d;
 	void *r;
+	char *s;
+	int found;
+	size_t rsz, usz, x;
+	uintptr_t tag;
 
 	if (!smalloc_verify_pool(spool)) {
 		errno = EINVAL;
@@ -51,59 +31,58 @@ void *sm_realloc_pool_i(struct smalloc_pool *spool, void *p, size_t n, int nomov
 		return NULL;
 	}
 
-	sstats = &spool->sp_stats;
 	/* determine user size */
 	shdr = USER_TO_HEADER(p);
 	if (!smalloc_is_alloc(spool, shdr)) smalloc_UB(spool, p);
-	usz = shdr->shdr_size;
-	rsz = orsz = REAL_SIZE(shdr->shdr_size);
+	usz = shdr->usz;
+	rsz = shdr->rsz;
 
-	/* n == size, why modify? just return */
-	if (n == usz) return p;
 	/* newsize is lesser than allocated - truncate */
-	if (n < usz) {
+	if (n <= usz) {
+		if (spool->do_zero) memset((char *)p + n, 0, shdr->rsz - n);
 		s = CHAR_PTR(HEADER_TO_USER(shdr));
-		memset(s+rsz, 0, HEADER_SZ);
-		if (spool->sp_do_zero) memset(s+n, 0, rsz-n);
-		shdr->shdr_tag2 = 0;
-		shdr->shdr_size = n;
-		rsz = REAL_SIZE(n);
-		shdr->shdr_tag = tag = smalloc_mktag(shdr);
-		memset(s+n, 0xff, rsz-n);
-		s += rsz;
-		dhdr = HEADER_PTR(s);
-		dhdr->shdr_tag2 = smalloc_uinthash(tag);
-		dhdr->shdr_tag = smalloc_uinthash(dhdr->shdr_tag2);
-
-		UPDATE_STATS(usz, orsz, n, rsz);
-
+		s += usz;
+		memset(s, 0, HEADER_SZ);
+		if (spool->do_zero) memset(s+HEADER_SZ, 0, rsz - usz);
+		shdr->rsz = (n%HEADER_SZ)?(((n/HEADER_SZ)+1)*HEADER_SZ):n;
+		shdr->usz = n;
+		shdr->tag = tag = smalloc_mktag(shdr);
+		s = CHAR_PTR(HEADER_TO_USER(shdr));
+		s += shdr->usz;
+		for (x = 0; x < sizeof(struct smalloc_hdr); x += sizeof(uintptr_t)) {
+			tag = smalloc_uinthash(tag);
+			memcpy(s+x, &tag, sizeof(uintptr_t));
+		}
+		memset(s+x, 0xff, shdr->rsz - shdr->usz);
 		return p;
 	}
 
-	/* newsize is bigger than allocated, but there is free room - modify headers only */
+	/* newsize is bigger than allocated, but there is free room - modify */
 	if (n > usz && n <= rsz) {
+		if (spool->do_zero) {
+			s = CHAR_PTR(HEADER_TO_USER(shdr));
+			s += usz;
+			memset(s, 0, HEADER_SZ);
+		}
+		shdr->usz = n;
+		shdr->tag = tag = smalloc_mktag(shdr);
 		s = CHAR_PTR(HEADER_TO_USER(shdr));
-		if (spool->sp_do_zero) memset(s+usz, 0, rsz-usz);
-		shdr->shdr_tag2 = 0;
-		shdr->shdr_size = n;
-		shdr->shdr_tag = tag = smalloc_mktag(shdr);
-		memset(s+n, 0xff, rsz-n);
-		s += rsz;
-		dhdr = HEADER_PTR(s);
-		dhdr->shdr_tag2 = smalloc_uinthash(tag);
-		dhdr->shdr_tag = smalloc_uinthash(dhdr->shdr_tag2);
-
-		UPDATE_STATS(usz, orsz, n, rsz);
-
+		s += shdr->usz;
+		for (x = 0; x < sizeof(struct smalloc_hdr); x += sizeof(uintptr_t)) {
+			tag = smalloc_uinthash(tag);
+			memcpy(s+x, &tag, sizeof(uintptr_t));
+		}
+		memset(s+x, 0xff, shdr->rsz - shdr->usz);
 		return p;
 	}
 
 	/* newsize is bigger, larger than rsz but there are free blocks beyond - extend */
-	basehdr = (struct smalloc_hdr *)spool->sp_pool; dhdr = shdr+(rsz/HEADER_SZ); found = 0;
-	while (CHAR_PTR(dhdr)-CHAR_PTR(basehdr) < spool->sp_pool_size) {
+	basehdr = (struct smalloc_hdr *)spool->pool; dhdr = shdr+(rsz/HEADER_SZ); found = 0;
+	while (CHAR_PTR(dhdr)-CHAR_PTR(basehdr) < spool->pool_size) {
 		x = CHAR_PTR(dhdr)-CHAR_PTR(shdr);
-		if (smalloc_is_alloc(spool, dhdr)) goto allocblock;
-		if (n+HEADER_SZ <= x) {
+		if (smalloc_is_alloc(spool, dhdr))
+			goto allocblock;
+		if (n + HEADER_SZ <= x) {
 			x -= HEADER_SZ;
 			found = 1;
 			goto outfound;
@@ -114,25 +93,22 @@ void *sm_realloc_pool_i(struct smalloc_pool *spool, void *p, size_t n, int nomov
 outfound:
 	/* write new numbers of same allocation */
 	if (found) {
-		if (spool->sp_do_zero) {
-			d = s = CHAR_PTR(HEADER_TO_USER(shdr));
-			s = d+usz;
-			memset(s, 0, n-usz);
-			s = d+rsz;
+		if (spool->do_zero) {
+			s = CHAR_PTR(HEADER_TO_USER(shdr));
+			s += usz;
 			memset(s, 0, HEADER_SZ);
+			memset(s+HEADER_SZ, 0, rsz - usz);
 		}
-		shdr->shdr_tag2 = 0;
-		shdr->shdr_size = n;
-		shdr->shdr_tag = tag = smalloc_mktag(shdr);
+		shdr->rsz = x;
+		shdr->usz = n;
+		shdr->tag = tag = smalloc_mktag(shdr);
 		s = CHAR_PTR(HEADER_TO_USER(shdr));
-		memset(s+n, 0xff, x-n);
-		s += x;
-		dhdr = HEADER_PTR(s);
-		dhdr->shdr_tag2 = smalloc_uinthash(tag);
-		dhdr->shdr_tag = smalloc_uinthash(dhdr->shdr_tag2);
-
-		UPDATE_STATS(usz, orsz, n, x);
-
+		s += shdr->usz;
+		for (x = 0; x < sizeof(struct smalloc_hdr); x += sizeof(uintptr_t)) {
+			tag = smalloc_uinthash(tag);
+			memcpy(s+x, &tag, sizeof(uintptr_t));
+		}
+		memset(s+x, 0xff, shdr->rsz - shdr->usz);
 		return p;
 	}
 

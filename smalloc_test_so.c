@@ -37,8 +37,6 @@
 #define PAGE_SIZE 4096
 #endif
 
-extern int mhexdump(const void *data, size_t szdata);
-
 static long sc_page_size;
 
 /* base pointer and size of allocated pool */
@@ -51,7 +49,6 @@ static int smalloc_initialised;
 static void exit_smalloc(void)
 {
 	if (smalloc_initialised) {
-		mhexdump(xpool, xpool_n);
 		sm_release_default_pool();
 		memset(xpool, 0, xpool_n);
 		munmap(xpool, xpool_n);
@@ -121,7 +118,7 @@ static void *getrndbase(void)
 static void xpool_ub(struct smalloc_pool *spool, const void *offender)
 {
 	errno = 0;
-	xerror(5, "%p: address is not from %p-%p range!", offender, xpool, xpool+spool->sp_pool_size);
+	xerror(5, "%p: address is not from %p-%p range!", offender, xpool, xpool+spool->pool_size);
 }
 
 /* called each time we ran out of memory, in hope to get more */

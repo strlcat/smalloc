@@ -12,13 +12,13 @@ size_t sm_szalloc_pool(struct smalloc_pool *spool, const void *p)
 
 	if (!smalloc_verify_pool(spool)) {
 		errno = EINVAL;
-		return SM_NOSIZE;
+		return ((size_t)-1);
 	}
 
 	if (!p) return 0;
 
 	shdr = USER_TO_HEADER(p);
-	if (smalloc_is_alloc(spool, shdr)) return shdr->shdr_size;
+	if (smalloc_is_alloc(spool, shdr)) return shdr->usz;
 	smalloc_UB(spool, p);
 	return 0;
 }

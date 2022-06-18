@@ -13,18 +13,14 @@
 #include <errno.h>
 
 struct smalloc_hdr {
-	union {
-		size_t shdr_size; /* exact user size as reported by s_szalloc */
-		uintptr_t shdr_tag2; /* align / tag2 for tail */
-	};
-	uintptr_t shdr_tag; /* sum of all the above, hashed value */
+	size_t rsz; /* real allocated size with overhead (if any) */
+	size_t usz; /* exact user size as reported by s_szalloc */
+	uintptr_t tag; /* sum of all the above, hashed value */
 };
 
 #define HEADER_SZ (sizeof(struct smalloc_hdr))
 #define MIN_POOL_SZ (HEADER_SZ*20)
 
-#define REAL_SIZE(n) ((n%HEADER_SZ)?(((n/HEADER_SZ)+1)*HEADER_SZ):n)
-#define TOTAL_SIZE(n) (REAL_SIZE(n)+(HEADER_SZ*2))
 #define VOID_PTR(p) ((void *)p)
 #define CHAR_PTR(p) ((char *)p)
 #define PTR_UINT(p) ((uintptr_t)VOID_PTR(p))
