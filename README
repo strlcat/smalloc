@@ -1,3 +1,17 @@
+WARNING: THIS CODE IS NOT SUPPORTED ANYMORE.
+If you considering using it, be aware that the code is not going to be supported.
+
+This code will be left as is. No changes or further
+development are planned. I planned some features to
+be implemented in past, but this code itself is not
+optimized for performance, so I abandoned it.
+
+I can recommend you to try out mimalloc instead, which
+does exactly what you want: allocation from multiple
+custom heaps, automatic zeroing, security features, highly
+tunable for specific task. It's not embedded-friendly tho.
+So if your code must run inside MCU, it's not what you want.
+
 SMalloc -- a *static* memory allocator.
 
 SMalloc allows you to use an arbitrary memory array, which is allocated
