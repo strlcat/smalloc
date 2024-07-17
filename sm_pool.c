@@ -40,7 +40,7 @@ int sm_set_pool(struct smalloc_pool *spool, void *new_pool, size_t new_pool_size
 
 	if (!new_pool || !new_pool_size) {
 		if (smalloc_verify_pool(spool)) {
-			if (spool->do_zero) memset(spool->pool, 0, spool->pool_size);
+			if (!spool->do_zero) memset(spool->pool, 0, spool->pool_size);
 			memset(spool, 0, sizeof(struct smalloc_pool));
 			return 1;
 		}
